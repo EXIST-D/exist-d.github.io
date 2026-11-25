@@ -1,78 +1,156 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Icon from '../components/Icon.astro';
-import { principles, siteConfig, techHighlights } from '../site.config';
+import { categoryLabel, education, siteConfig, skillGroups } from '../site.config';
+import { formatIsoDate } from '../utils/format';
 import { withBase } from '../utils/url';
 import homeData from '../content/site/home.json';
+import '../styles/about.css';
 
-const facts = [
-  { label: '学校与专业', value: '中国地质大学（北京）· 应用统计硕士' },
-  { label: '预计毕业', value: '2028 年' },
-  { label: '求职方向', value: 'AI 应用开发 / 大模型开发 / 数据工程' },
-  { label: '所在地区', value: siteConfig.location },
-  { label: '当前状态', value: siteConfig.availability },
-];
+const notes = (await getCollection('notes', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime(),
+);
+const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
+
+// "~~word~~" in the tagline renders as a strikethrough.
+const tagline = homeData.aboutSection.tagline
+  .split(/(~~[^~]+~~)/)
+  .filter(Boolean)
+  .map((text) => (text.startsWith('~~') ? { text: text.slice(2, -2), struck: true } : { text, struck: false }));
 
 const directions = [
-  { label: '个人 Agent 与 RAG', title: '让对话有上下文，让讨论有出处。', body: '在 WeiJin 中实践文学检索、人格版本、记忆治理与本地部署。', href: '/projects/weijin' },
-  { label: '面试学习工具', title: '从零散素材，到能持续复习的题库。', body: 'Gleaner 负责发现与打包，Interview Bank 负责整理与研究，在线版承接日常阅读和练习。', href: '/projects/interview-bank' },
-  { label: '研究与统计自动化', title: '保留研究过程中的证据与确认。', body: '以 MedStatForge、医学分析编排与 SPSS Skills，探索从数据、方案到统计交付的可追溯流程。', href: '/projects/medstatforge' },
+  { label: '个人 Agent 与 RAG', body: '在 WeiJin 中实践文学检索、人格版本、记忆治理与本地部署。', href: '/projects/weijin' },
+  { label: '面试学习工具', body: 'Gleaner 负责发现与打包，Interview Bank 负责整理与研究，在线版承接日常阅读和练习。', href: '/projects/interview-bank' },
+  { label: '研究与统计自动化', body: '以 MedStatForge、医学分析编排与 SPSS Skills，探索从数据、方案到统计交付的可追溯流程。', href: '/projects/medstatforge' },
 ];
 ---
 
 <BaseLayout title={`关于 | ${siteConfig.name}`} description="EXIST-D，中国地质大学（北京）应用统计硕士在读，关注 AI Agent、RAG、数据工程与研究流程自动化。">
-  <header class="container-narrow page-head">
-    <p class="eyebrow">About</p>
-    <h1 class="page-title">你好，我是{siteConfig.name}。</h1>
-    <p class="page-desc lg">{homeData.aboutSection.summary}</p>
-    <div class="hero-actions">
-      <a class="button primary" href={`mailto:${siteConfig.email}`}><Icon name="mail" size={15} />写邮件给我</a>
-      <a class="button" href={siteConfig.github} target="_blank" rel="noreferrer"><Icon name="github" size={15} />GitHub</a>
-    </div>
-  </header>
+  <div class="about-page">
+    <!-- Profile -->
+    <header class="profile">
+      <img class="profile-avatar" src={siteConfig.avatar} alt={`${siteConfig.handle} 的头像`} width="112" height="112" decoding="async" />
+      <h1 class="profile-name">{siteConfig.handle}</h1>
+      <p class="profile-links">
+        <span><Icon name="location" size={16} />{siteConfig.location}</span>
+        <a href={siteConfig.github} target="_blank" rel="noreferrer"><Icon name="github" size={15} />GitHub</a>
+      </p>
+    </header>
 
-  <div class="container-narrow about-sections">
-    <section aria-labelledby="facts-title">
-      <h2 id="facts-title" class="section-title">基本信息</h2>
-      <dl class="fact-table">
-        {facts.map((fact) => <div><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}
-      </dl>
-    </section>
-
-    <section aria-labelledby="direction-title">
-      <h2 id="direction-title" class="section-title">我在做的方向</h2>
-      <div class="direction-list">
-        {
-          directions.map((item, index) => (
-            <article class="direction-item">
-              <span class="now-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-              <div>
-                <p class="eyebrow-sm">{item.label}</p>
-                <h3><a class="stretched-link" href={withBase(item.href)}>{item.title}</a></h3>
-                <p>{item.body}</p>
-              </div>
-            </article>
-          ))
-        }
+    <!-- About -->
+    <section class="about-row" aria-labelledby="about-title">
+      <h2 id="about-title" class="row-label">About</h2>
+      <div class="row-body about-text">
+        <p class="about-tagline">
+          {
+            tagline.map((part) => (part.struck ? <s>{part.text}</s> : part.text))
+          }
+        </p>
+        {homeData.aboutSection.paragraphs.map((text) => <p>{text}</p>)}
+        <p>近期主要在这三个方向上折腾：</p>
+        <ul class="about-directions">
+          {
+            directions.map((item) => (
+              <li>
+                <a href={withBase(item.href)}>{item.label}</a>
+                <span>{item.body}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <p>求职方向是 AI 应用开发、大模型开发与数据工程，{siteConfig.availability}。</p>
+        <div class="about-actions">
+          <a class="pill-button" href={`mailto:${siteConfig.email}`}><Icon name="mail" size={14} />写邮件给我</a>
+          <a class="pill-button" href="https://exist.qd.je/" target="_blank" rel="noreferrer"><Icon name="book" size={14} />在线刷题</a>
+          <a class="pill-button" href={withBase('/rss.xml')}><Icon name="rss" size={14} />RSS</a>
+        </div>
       </div>
     </section>
 
-    <section id="tech-stack" aria-labelledby="stack-title">
-      <h2 id="stack-title" class="section-title">技术栈</h2>
-      <dl class="stack-list">
-        {techHighlights.map((item) => <div><dt>{item.title}</dt><dd>{item.description}</dd></div>)}
-      </dl>
+    <!-- Posts -->
+    <section class="about-row" aria-labelledby="posts-title">
+      <h2 id="posts-title" class="row-label">文章</h2>
+      <div class="row-body">
+        <ul class="pill-list">
+          {
+            notes.slice(0, 6).map((note) => (
+              <li>
+                <a class="pill-row" href={withBase(`/notes/${note.slug}`)}>
+                  <time datetime={note.data.publishedAt.toISOString()}>{formatIsoDate(note.data.publishedAt)}</time>
+                  <span class="pill-title">{note.data.title}</span>
+                  <Icon name="arrow" size={15} class="pill-arrow" />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="about-more"><a class="pill-button sm" href={withBase('/notes')}>更多文章 <Icon name="arrow" size={13} /></a></div>
+      </div>
     </section>
 
-    <section aria-labelledby="principle-title">
-      <h2 id="principle-title" class="section-title">写作与做事的原则</h2>
-      <ul class="principle-list">{principles.map((item) => <li>{item}</li>)}</ul>
+    <!-- Projects -->
+    <section class="about-row" aria-labelledby="projects-title">
+      <h2 id="projects-title" class="row-label">项目</h2>
+      <div class="row-body">
+        <ul class="pill-list">
+          {
+            projects.slice(0, 6).map((project) => (
+              <li>
+                <a class="pill-row" href={withBase(`/projects/${project.slug}`)} data-category={project.data.category}>
+                  <span class="pill-cat">{categoryLabel(project.data.category)}</span>
+                  <span class="pill-title">{project.data.title}</span>
+                  <span class="pill-status">{project.data.status}</span>
+                  <Icon name="arrow" size={15} class="pill-arrow" />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="about-more"><a class="pill-button sm" href={withBase('/projects')}>全部 {projects.length} 个项目 <Icon name="arrow" size={13} /></a></div>
+      </div>
     </section>
 
-    <section class="contact-card" aria-labelledby="contact-title">
-      <h2 id="contact-title">聊聊项目与机会</h2>
-      <p>欢迎交流 AI 应用、Agent 开发、研究自动化，以及相关实习与工作机会。</p>
-      <a class="contact-email" href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>
+    <!-- Education -->
+    <section class="about-row" aria-labelledby="edu-title">
+      <h2 id="edu-title" class="row-label">教育</h2>
+      <div class="row-body">
+        <ul class="edu-list">
+          {
+            education.map((item) => (
+              <li class="edu-card">
+                <span class="edu-mark" aria-hidden="true">{item.mark}</span>
+                <strong>{item.school}</strong>
+                <span>{item.degree}</span>
+                <span class="edu-period">{item.period}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
     </section>
+
+    <!-- Skills -->
+    <section class="about-row" id="tech-stack" aria-labelledby="skills-title">
+      <h2 id="skills-title" class="row-label">技术栈</h2>
+      <div class="row-body">
+        <dl class="skill-table">
+          {
+            skillGroups.map((group) => (
+              <div>
+                <dt>{group.title}</dt>
+                <dd>
+                  {group.items.map((item) => (
+                    <span class="skill-chip">{item}</span>
+                  ))}
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+    </section>
+
+    <p class="about-quote"><span class="pulse-dot" aria-hidden="true"></span>{homeData.hero.quote}</p>
   </div>
 </BaseLayout>

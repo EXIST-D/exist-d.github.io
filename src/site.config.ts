@@ -27,6 +27,8 @@ export const navLinks = [
 
 export const techHighlights = siteData.techHighlights;
 export const principles = siteData.principles;
+export const skillGroups = siteData.skillGroups;
+export const education = siteData.education;
 export const contactLinks = siteData.contactLinks;
 
 export const projectCategories = [

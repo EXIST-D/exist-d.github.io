@@ -42,33 +42,66 @@
   ],
   "skillGroups": [
     {
-      "title": "前端",
+      "title": "编程语言",
       "items": [
-        "HTML",
-        "CSS",
-        "JavaScript",
-        "TypeScript",
+        "Python",
+        "R",
+        "SQL",
+        "MATLAB",
+        "TypeScript"
+      ]
+    },
+    {
+      "title": "Agent 开发",
+      "items": [
+        "LangChain",
+        "LangGraph",
+        "Tool Calling",
+        "结构化输出",
+        "Human-in-the-loop",
+        "Context Engineering"
+      ]
+    },
+    {
+      "title": "RAG 与检索",
+      "items": [
+        "Embedding",
+        "BM25",
+        "RRF",
+        "Reranker",
+        "Milvus",
+        "BGE-M3"
+      ]
+    },
+    {
+      "title": "数据工程",
+      "items": [
+        "SPSS",
+        "Spark",
+        "Kafka",
+        "DuckDB",
+        "SQLite"
+      ]
+    },
+    {
+      "title": "应用开发",
+      "items": [
+        "FastAPI",
+        "Vue 3",
         "React",
+        "Phaser 3",
+        "Tauri",
         "Astro"
       ]
     },
     {
-      "title": "工程化",
+      "title": "工具",
       "items": [
+        "Claude Code",
+        "Codex",
         "Git",
-        "Vite",
-        "ESLint",
-        "Prettier",
-        "自动化部署"
-      ]
-    },
-    {
-      "title": "后端与数据",
-      "items": [
-        "Node.js",
-        "REST API",
-        "MySQL",
-        "Supabase"
+        "Linux",
+        "Docker Compose"
       ]
     }
   ],
@@ -106,6 +139,14 @@
     {
       "label": "订阅",
       "href": "/rss.xml"
+    }
+  ],
+  "education": [
+    {
+      "school": "中国地质大学（北京）",
+      "mark": "CUGB",
+      "degree": "应用统计 · 专业硕士",
+      "period": "在读 · 预计 2028 年毕业"
     }
   ]
 }
