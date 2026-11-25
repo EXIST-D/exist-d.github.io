@@ -85,7 +85,7 @@ repo:
 
 项目方向 `category` 支持 `agent`、`skills`、`data`、`tools`、`game`。`draft: true` 的项目不会出现在列表、详情路由或站点地图中；原始文件仍保留。`demo` 与 `repo` 为可选 URL，没有时直接省略该字段。
 
-首页近期项目固定展示 PixelCampus、WeiJin、Interview Bank、Gleaner，其余项目可在首页案例下方与项目列表中查看。在线产品入口统一在 `src/content/site/home.json` 的 `onlineProducts` 中维护。
+首页精选项目由 `src/content/site/home.json` 的 `featuredProjects`（项目文件名列表）决定，其余项目会以文字链接列在精选卡片下方，并完整出现在项目页。没有 `image` 的项目会自动用分类色底和字标作为封面（字标在 `src/site.config.ts` 的 `projectSymbols` 中维护）。在线产品入口统一在 `src/content/site/home.json` 的 `onlineProducts` 中维护。
 
 图片建议放在：
 

@@ -1,13 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="王明旭 · 个人博客与开源实践">
-  <rect width="1200" height="630" fill="#f3f4f6"/>
-  <rect x="64" y="64" width="1072" height="502" rx="32" fill="#fff" stroke="#e3e6ec" stroke-width="2"/>
-  <rect x="108" y="108" width="64" height="64" rx="18" fill="#3566cf"/>
-  <text x="119" y="153" font-family="sans-serif" font-size="38" font-weight="700" fill="#fff">W.</text>
-  <text x="194" y="150" font-family="sans-serif" font-size="25" fill="#646f81">EXIST-D / PROJECTS &amp; NOTES</text>
-  <text x="108" y="282" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="64" font-weight="700" fill="#242b38">王明旭</text>
-  <text x="108" y="354" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="39" fill="#242b38">AI 应用、Agent 与开源实践</text>
-  <text x="108" y="415" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="23" fill="#596274">个人 Agent · 面试学习工具 · 统计与研究自动化</text>
-  <path d="M108 458h984" stroke="#e3e6ec" stroke-width="2"/>
-  <text x="108" y="513" font-family="sans-serif" font-size="22" fill="#3566cf">github.com/EXIST-D</text>
-  <text x="825" y="513" font-family="Microsoft YaHei, sans-serif" font-size="20" fill="#646f81">中国地质大学（北京）</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="EXIST-D · 个人博客与开源实践">
+  <rect width="1200" height="630" fill="#fbfaf7"/>
+  <rect x="96" y="96" width="72" height="72" rx="20" fill="#1f1d1a"/>
+  <text x="132" y="146" text-anchor="middle" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="38" font-weight="700" fill="#fbfaf7">E</text>
+  <text x="192" y="142" font-family="ui-monospace, Menlo, monospace" font-size="22" letter-spacing="3" fill="#2a6c58">EXIST-D · PROJECTS &amp; WRITING</text>
+  <text x="96" y="318" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="76" font-weight="800" fill="#1f1d1a">嗨，我是 EXIST-D<tspan fill="#2f7a63">.</tspan></text>
+  <text x="96" y="392" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="32" fill="#57534b">应用统计硕士在读，致力于将想法构建成可以使用的工具</text>
+  <path d="M96 470h1008" stroke="#e8e4dc" stroke-width="2"/>
+  <text x="96" y="528" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="24" fill="#858077">个人 Agent · 面试学习工具 · 统计与研究自动化</text>
+  <text x="1104" y="528" text-anchor="end" font-family="ui-monospace, Menlo, monospace" font-size="22" fill="#2a6c58">github.com/EXIST-D</text>
 </svg>

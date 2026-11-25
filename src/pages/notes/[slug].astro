@@ -1,97 +1,150 @@
 ---
 import { getCollection, type CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Tag from '../../components/Tag.astro';
+import Icon from '../../components/Icon.astro';
 import { siteConfig } from '../../site.config';
 import { getRelatedNotes, slugifyTag } from '../../utils/content';
 import { formatDate } from '../../utils/format';
 import { withBase } from '../../utils/url';
 
 export async function getStaticPaths() {
-  const notes = await getCollection('notes', ({ data }) => !data.draft);
-
-  return notes.map((entry) => ({
+  const notes = (await getCollection('notes', ({ data }) => !data.draft)).sort(
+    (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime(),
+  );
+  return notes.map((entry, index) => ({
     params: { slug: entry.slug },
-    props: { entry },
+    props: { entry, newer: notes[index - 1], older: notes[index + 1], related: getRelatedNotes(notes, entry) },
   }));
 }
 
 interface Props {
   entry: CollectionEntry<'notes'>;
+  newer?: CollectionEntry<'notes'>;
+  older?: CollectionEntry<'notes'>;
+  related: Array<CollectionEntry<'notes'>>;
 }
 
-const { entry } = Astro.props;
+const { entry, newer, older, related } = Astro.props;
+const { data } = entry;
 const { Content, headings } = await entry.render();
-const tableOfContents = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
-const title = `${entry.data.title} | ${siteConfig.name}`;
-const allNotes = (await getCollection('notes', ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime(),
-);
-const relatedNotes = getRelatedNotes(allNotes, entry);
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const url = new URL(withBase(`/notes/${entry.slug}`), Astro.site ?? siteConfig.site).toString();
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'BlogPosting',
-  headline: entry.data.title,
-  description: entry.data.description,
-  datePublished: entry.data.publishedAt.toISOString(),
-  dateModified: (entry.data.updatedAt ?? entry.data.publishedAt).toISOString(),
-  author: {
-    '@type': 'Person',
-    name: siteConfig.name,
-  },
+  headline: data.title,
+  description: data.description,
+  datePublished: data.publishedAt.toISOString(),
+  dateModified: (data.updatedAt ?? data.publishedAt).toISOString(),
+  author: { '@type': 'Person', name: siteConfig.name },
   mainEntityOfPage: url,
-  keywords: entry.data.tags.join(', '),
+  keywords: data.tags.join(', '),
 };
+const relatedOnly = related.filter((note) => note.slug !== newer?.slug && note.slug !== older?.slug);
 ---
 
-<BaseLayout title={title} description={entry.data.description} structuredData={structuredData}>
-  <section class="page-hero">
-    <div class="container article-shell">
-      <article class="detail-shell">
-        <header class="post-header">
-          <p class="eyebrow">学习笔记</p>
-          <h1>{entry.data.title}</h1>
-          <p>{entry.data.description}</p>
-          <div class="meta-inline">
-            <span class="entry-date">{formatDate(entry.data.publishedAt)}</span>
-            <span class="entry-date">{entry.data.minutes} 分钟阅读</span>
-            {entry.data.updatedAt && <span class="entry-date">更新于 {formatDate(entry.data.updatedAt)}</span>}
-          </div>
-          <div class="entry-tags">
-            {entry.data.tags.map((tag) => (
-              <a href={withBase(`/topics/${slugifyTag(tag)}`)}>
-                <Tag label={tag} />
-              </a>
-            ))}
-          </div>
-        </header>
+<BaseLayout title={`${data.title} | ${siteConfig.name}`} description={data.description} structuredData={structuredData} progress headerTitle={data.title} headerKicker="文章">
+  <div class:list={['container', 'article-layout', toc.length > 1 && 'has-toc']}>
+    <article class="detail">
+      <header class="detail-head">
+        <a class="back-link" href={withBase('/notes')}><Icon name="arrow-left" size={15} />全部文章</a>
+        <ul class="tag-row" aria-label="文章标签">
+          {data.tags.map((tag) => <li><a href={withBase(`/topics/${slugifyTag(tag)}`)}>#{tag}</a></li>)}
+        </ul>
+        <h1 class="detail-title">{data.title}</h1>
+        <p class="detail-desc">{data.description}</p>
+        <p class="detail-meta">
+          <span><Icon name="calendar" size={15} /><time datetime={data.publishedAt.toISOString()}>{formatDate(data.publishedAt)}</time></span>
+          <span><Icon name="clock" size={15} />{data.minutes} 分钟阅读</span>
+          {data.updatedAt && <span>更新于 {formatDate(data.updatedAt)}</span>}
+        </p>
+      </header>
 
-        <div class="prose">
-          <Content />
-        </div>
-      </article>
+      <div class="prose">
+        <Content />
+      </div>
 
-      <aside class="detail-sidebar">
-        {tableOfContents.length > 0 && <nav class="page-panel" aria-label="文章目录">
-          <p class="panel-label">本文目录</p>
-          <ol class="article-toc">{tableOfContents.map((heading) => <li class:list={{ 'toc-subheading': heading.depth === 3 }}><a href={`#${heading.slug}`}>{heading.text}</a></li>)}</ol>
-        </nav>}
-
-        {relatedNotes.length > 0 && (
-          <div class="page-panel">
-            <p class="panel-label">相关文章</p>
-            <div class="related-list">
-              {relatedNotes.map((note) => (
-                <a class="related-item" href={withBase(`/notes/${note.slug}`)}>
-                  <strong>{note.data.title}</strong>
-                  <span>{formatDate(note.data.publishedAt)}</span>
-                </a>
-              ))}
+      <footer class="detail-foot">
+        <div class="author-card">
+          <img class="author-avatar" src={siteConfig.avatar} alt="" width="52" height="52" loading="lazy" decoding="async" />
+          <div>
+            <strong>{siteConfig.handle}</strong>
+            <p>{siteConfig.intro}</p>
+            <div class="author-links">
+              <a href={withBase('/about')}>关于我</a>
+              <a href={siteConfig.github} target="_blank" rel="noreferrer">GitHub</a>
+              <a href={withBase('/rss.xml')}>RSS 订阅</a>
             </div>
           </div>
-        )}
-      </aside>
-    </div>
-  </section>
+        </div>
+
+        {
+          (newer || older) && (
+            <nav class="pager" aria-label="上一篇与下一篇">
+              {older ? (
+                <a class="pager-link" href={withBase(`/notes/${older.slug}`)}>
+                  <span>上一篇</span>
+                  <strong>{older.data.title}</strong>
+                </a>
+              ) : <span />}
+              {newer && (
+                <a class="pager-link is-next" href={withBase(`/notes/${newer.slug}`)}>
+                  <span>下一篇</span>
+                  <strong>{newer.data.title}</strong>
+                </a>
+              )}
+            </nav>
+          )
+        }
+
+        {
+          relatedOnly.length > 0 && (
+            <section class="related" aria-labelledby="related-title">
+              <h2 id="related-title" class="related-title">相关文章</h2>
+              <ul>
+                {relatedOnly.map((note) => (
+                  <li><a href={withBase(`/notes/${note.slug}`)}>{note.data.title}</a></li>
+                ))}
+              </ul>
+            </section>
+          )
+        }
+      </footer>
+    </article>
+
+    {
+      toc.length > 1 && (
+        <aside class="toc" aria-label="文章目录">
+          <p class="toc-label">目录</p>
+          <ol>
+            {toc.map((heading) => (
+              <li class:list={{ 'is-sub': heading.depth === 3 }}>
+                <a href={`#${heading.slug}`} data-toc-link={heading.slug}>{heading.text}</a>
+              </li>
+            ))}
+          </ol>
+          <a class="toc-top" href="#main-content"><Icon name="arrow-up" size={14} />回到顶部</a>
+        </aside>
+      )
+    }
+  </div>
 </BaseLayout>
+
+<script>
+  // Highlight the table-of-contents entry for the section being read.
+  const links = new Map(
+    Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')).map((link) => [link.dataset.tocLink, link]),
+  );
+  if (links.size) {
+    const headings = Array.from(document.querySelectorAll<HTMLElement>('.prose h2[id], .prose h3[id]')).filter((h) => links.has(h.id));
+    const update = () => {
+      let current = headings[0]?.id;
+      for (const heading of headings) {
+        if (heading.getBoundingClientRect().top < 140) current = heading.id;
+      }
+      links.forEach((link, id) => link.toggleAttribute('aria-current', id === current));
+    };
+    addEventListener('scroll', update, { passive: true });
+    update();
+  }
+</script>

@@ -1,24 +1,286 @@
 ---
-import { navLinks, siteConfig } from '../site.config';
+import { getCollection } from 'astro:content';
+import { navLinks, projectCategories, siteConfig } from '../site.config';
+import { getAllTopics, slugifyTag } from '../utils/content';
+import { formatShortDate } from '../utils/format';
 import { withBase, withoutBase } from '../utils/url';
+import homeData from '../content/site/home.json';
 import Icon from './Icon.astro';
+
+interface Props {
+  /** Shown in the header centre after scrolling (detail pages). */
+  title?: string;
+  kicker?: string;
+}
+const { title, kicker } = Astro.props;
+
 const pathname = withoutBase(Astro.url.pathname);
+const isActive = (href: string) => pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
+
+/* ---------- Data for the hover previews ---------- */
+type PreviewItem = { href: string; title: string; meta: string };
+type PreviewGroup = { id: string; label: string; count: number; href: string; items: PreviewItem[] };
+type Preview = { label: string; groups: PreviewGroup[]; allHref: string; allText: string; total: string };
+
+const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
+const notes = (await getCollection('notes', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime(),
+);
+
+const projectItem = (p: (typeof projects)[number], i: number): PreviewItem => ({
+  href: withBase(`/projects/${p.slug}`),
+  title: p.data.title,
+  meta: String(i + 1).padStart(2, '0'),
+});
+const projectPreview: Preview = {
+  label: '方向',
+  groups: [
+    { id: 'all', label: '全部', count: projects.length, href: withBase('/projects'), items: projects.slice(0, 5).map(projectItem) },
+    ...projectCategories
+      .map((c) => {
+        const list = projects.filter((p) => p.data.category === c.id);
+        return { id: c.id, label: c.label, count: list.length, href: withBase(`/projects?category=${c.id}`), items: list.slice(0, 5).map(projectItem) };
+      })
+      .filter((g) => g.count > 0),
+  ],
+  allHref: withBase('/projects'),
+  allText: '查看全部项目',
+  total: `${projects.length} 个项目`,
+};
+
+const noteItem = (n: (typeof notes)[number]): PreviewItem => ({
+  href: withBase(`/notes/${n.slug}`),
+  title: n.data.title,
+  meta: formatShortDate(n.data.publishedAt).replace('-', '·'),
+});
+const notePreview: Preview = {
+  label: '专题',
+  groups: [
+    { id: 'all', label: '全部', count: notes.length, href: withBase('/notes'), items: notes.slice(0, 5).map(noteItem) },
+    ...getAllTopics(notes)
+      .slice(0, 6)
+      .map((t) => ({
+        id: t.slug,
+        label: t.name,
+        count: t.count,
+        href: withBase(`/topics/${t.slug}`),
+        items: notes.filter((n) => n.data.tags.some((tag) => slugifyTag(tag) === t.slug)).slice(0, 5).map(noteItem),
+      })),
+  ],
+  allHref: withBase('/notes'),
+  allText: '查看全部文章',
+  total: `${notes.length} 篇文章`,
+};
+const previews: Record<string, Preview> = { '/projects': projectPreview, '/notes': notePreview };
+
+/* Torn-paper edge: a deterministic jagged polygon for the preview panel. */
+const jag = (n: number, seed: number) =>
+  Array.from({ length: n + 1 }, (_, i) => {
+    const r = Math.abs(Math.sin((i + 1) * 12.9898 + seed * 78.233) * 43758.5453) % 1;
+    return { x: (i / n) * 100, y: r * 3.2 };
+  });
+const top = jag(36, 1).map((p) => `${p.x.toFixed(2)}% ${p.y.toFixed(1)}px`);
+const bottom = jag(36, 2)
+  .reverse()
+  .map((p) => `${p.x.toFixed(2)}% calc(100% - ${p.y.toFixed(1)}px)`);
+const tornClip = `polygon(${[...top, ...bottom].join(', ')})`;
 ---
-<header class="site-header">
-  <div class="container header-inner">
-    <a class="brand" href={withBase('/')}>
-      <span class="brand-mark" aria-hidden="true">W<span>.</span></span>
-      <span class="brand-copy"><strong>{siteConfig.name}<span class="brand-suffix"> / EXIST-D</span></strong><small>{siteConfig.role}</small></span>
+
+<header class="site-header" data-header>
+  <div class="header-bg" aria-hidden="true"></div>
+  <div class="header-inner">
+    <a class="header-brand" href={withBase('/')} aria-label={`${siteConfig.handle} · 返回首页`}>
+      <img src={siteConfig.avatar} alt="" width="36" height="36" decoding="async" />
+      <span>{siteConfig.handle}</span>
     </a>
-    <nav class="site-nav" aria-label="主导航">
-      {navLinks.map((item) => {
-        const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(`${item.href}/`));
-        return <a class:list={['nav-link', active && 'is-active']} aria-current={active ? 'page' : undefined} href={withBase(item.href)}>{item.label}</a>;
-      })}
+
+    {
+      title && (
+        <div class="header-meta" aria-hidden="true">
+          {kicker && <span class="header-meta-kicker">{kicker}</span>}
+          <span class="header-meta-title">{title}</span>
+        </div>
+      )
+    }
+
+    <nav class="header-nav" aria-label="主导航">
+      <ul class="nav-links">
+        {
+          navLinks.map((item) => {
+            const preview = previews[item.href];
+            const active = isActive(item.href);
+            return (
+              <li class:list={['nav-li', preview && 'has-preview']}>
+                <a class:list={['nav-link', active && 'is-active']} aria-current={active ? 'page' : undefined} href={withBase(item.href)}>
+                  {item.label}
+                  {active && (
+                    <svg class="nav-brush" viewBox="0 0 64 8" preserveAspectRatio="none" aria-hidden="true">
+                      <path d="M2 5.2C12 2.4 22 6.6 33 4.1S52 2.6 62 4.6" />
+                    </svg>
+                  )}
+                </a>
+                {preview && (
+                  <div class="nav-preview" data-preview>
+                    <div class="preview-paper" style={`clip-path:${tornClip}`}>
+                      <div class="preview-cols">
+                        <div class="preview-cats">
+                          <p class="preview-label">{preview.label}</p>
+                          <ul>
+                            {preview.groups.map((group, index) => (
+                              <li>
+                                <a href={group.href} data-group={group.id} data-label={group.label} class:list={[index === 0 && 'is-current']}>
+                                  <span>{group.label}</span>
+                                  <span class="preview-count">{group.count}</span>
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div class="preview-list">
+                          <p class="preview-label">
+                            <span data-current-label>{preview.groups[0].label}</span> · 最近
+                          </p>
+                          {preview.groups.map((group, index) => (
+                            <ol data-group-list={group.id} hidden={index !== 0}>
+                              {group.items.map((entry) => (
+                                <li>
+                                  <a href={entry.href}>
+                                    <span class="preview-meta">{entry.meta}</span>
+                                    <span class="preview-title">{entry.title}</span>
+                                  </a>
+                                </li>
+                              ))}
+                            </ol>
+                          ))}
+                        </div>
+                      </div>
+                      <div class="preview-foot">
+                        <a href={preview.allHref}>{preview.allText} →</a>
+                        <span>{preview.total}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })
+        }
+      </ul>
     </nav>
+
+    <span class="header-divider" aria-hidden="true"></span>
+
     <div class="header-actions">
-      <button type="button" class="icon-button" data-open-search aria-label="搜索项目与笔记" title="搜索（Ctrl K）"><Icon name="search" /></button>
-      <a class="nav-product" href="https://exist.qd.je/" target="_blank" rel="noreferrer">在线刷题</a>
+      <button type="button" class="header-icon-button" data-open-search aria-label="搜索项目与文章（快捷键 Ctrl K）">
+        <Icon name="search" size={18} />
+      </button>
+      <button type="button" class="header-icon-button theme-toggle" data-theme-toggle aria-label="切换深色模式">
+        <Icon name="sun" size={18} class="icon-sun" />
+        <Icon name="moon" size={18} class="icon-moon" />
+      </button>
+      <button
+        type="button"
+        class="header-icon-button drawer-toggle"
+        data-drawer-toggle
+        aria-label="打开导航菜单"
+        aria-expanded="false"
+        aria-controls="mobile-drawer"
+      >
+        <Icon name="menu" size={19} />
+      </button>
     </div>
   </div>
 </header>
+
+<div class="drawer" id="mobile-drawer" data-drawer hidden>
+  <div class="drawer-backdrop" data-drawer-close></div>
+  <nav class="drawer-panel" aria-label="主导航">
+    <div class="drawer-head">
+      <img src={siteConfig.avatar} alt="" width="44" height="44" decoding="async" />
+      <div>
+        <strong>{siteConfig.handle}</strong>
+        <span>{homeData.hero.quote}</span>
+      </div>
+      <button type="button" class="header-icon-button" data-drawer-close aria-label="关闭导航菜单"><Icon name="close" size={20} /></button>
+    </div>
+    <ul>
+      {
+        navLinks.map((item, index) => (
+          <li style={`--i: ${index}`}>
+            <a class:list={['drawer-link', isActive(item.href) && 'is-active']} href={withBase(item.href)} aria-current={isActive(item.href) ? 'page' : undefined}>
+              <Icon name={item.icon} size={18} />
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</div>
+
+<script>
+  /* ---- Theme toggle ---- */
+  const root = document.documentElement;
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  const effective = () => root.dataset.theme ?? (media.matches ? 'dark' : 'light');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+  const syncTheme = () => toggle?.setAttribute('aria-label', effective() === 'dark' ? '切换到浅色模式' : '切换到深色模式');
+  toggle?.addEventListener('click', () => {
+    const next = effective() === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try {
+      localStorage.setItem('theme', next);
+    } catch {}
+    syncTheme();
+  });
+  media.addEventListener('change', syncTheme);
+  syncTheme();
+
+  /* ---- Header background fades in after scrolling past the hero area ---- */
+  const header = document.querySelector<HTMLElement>('[data-header]')!;
+  let frame = 0;
+  const update = () => {
+    frame = 0;
+    const bg = Math.min(1, Math.max(0, (window.scrollY - 120) / 60));
+    header.style.setProperty('--bg-opacity', String(bg));
+    header.toggleAttribute('data-solid', bg >= 1);
+  };
+  addEventListener('scroll', () => (frame ||= requestAnimationFrame(update)), { passive: true });
+  update();
+
+  /* ---- Hover previews: hovering a group on the left swaps the list on the right ---- */
+  document.querySelectorAll<HTMLElement>('[data-preview]').forEach((panel) => {
+    const label = panel.querySelector<HTMLElement>('[data-current-label]');
+    const show = (link: HTMLAnchorElement) => {
+      const id = link.dataset.group;
+      panel.querySelectorAll('[data-group]').forEach((el) => el.classList.toggle('is-current', el === link));
+      panel.querySelectorAll<HTMLElement>('[data-group-list]').forEach((list) => (list.hidden = list.dataset.groupList !== id));
+      if (label) label.textContent = link.dataset.label ?? '';
+    };
+    panel.querySelectorAll<HTMLAnchorElement>('[data-group]').forEach((link) => {
+      link.addEventListener('pointerenter', () => show(link));
+      link.addEventListener('focus', () => show(link));
+    });
+  });
+
+  /* ---- Mobile drawer ---- */
+  const drawer = document.querySelector<HTMLElement>('[data-drawer]')!;
+  const drawerToggle = document.querySelector<HTMLButtonElement>('[data-drawer-toggle]')!;
+  const setDrawer = (open: boolean) => {
+    if (open) {
+      drawer.hidden = false;
+      requestAnimationFrame(() => drawer.classList.add('is-open'));
+      drawer.querySelector<HTMLElement>('.drawer-link')?.focus();
+    } else {
+      drawer.classList.remove('is-open');
+      setTimeout(() => (drawer.hidden = true), 260);
+    }
+    drawerToggle.setAttribute('aria-expanded', String(open));
+    document.body.style.overflow = open ? 'hidden' : '';
+  };
+  drawerToggle.addEventListener('click', () => setDrawer(true));
+  drawer.querySelectorAll('[data-drawer-close]').forEach((el) => el.addEventListener('click', () => setDrawer(false)));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !drawer.hidden) setDrawer(false);
+  });
+</script>

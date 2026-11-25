@@ -1,16 +1,26 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import Icon from './Icon.astro';
-import { formatDate } from '../utils/format';
-import { slugifyTag } from '../utils/content';
+import { formatIsoDate, formatShortDate } from '../utils/format';
 import { withBase } from '../utils/url';
-interface Props { note: CollectionEntry<'notes'>; }
-const { note } = Astro.props;
+
+interface Props {
+  note: CollectionEntry<'notes'>;
+  /** Show the description under the title. */
+  excerpt?: boolean;
+  /** Include the year in the date column (lists not grouped by year). */
+  fullDate?: boolean;
+}
+const { note, excerpt = true, fullDate = false } = Astro.props;
 ---
-<article class="note-card">
-  <time datetime={note.data.publishedAt.toISOString()}>{formatDate(note.data.publishedAt)}</time>
-  <h3><a href={withBase(`/notes/${note.slug}`)}>{note.data.title}<Icon name="arrow" size={19} /></a></h3>
-  <p>{note.data.description}</p>
-  <span class="note-reading"><Icon name="clock" size={15} />{note.data.minutes} 分钟阅读</span>
-  <div class="entry-tags">{note.data.tags.map((tag) => <a class="tag" href={withBase(`/topics/${slugifyTag(tag)}`)}>{tag}</a>)}</div>
+
+<article class:list={['note-row', fullDate && 'has-full-date']}>
+  <time class="note-date" datetime={note.data.publishedAt.toISOString()}>{fullDate ? formatIsoDate(note.data.publishedAt) : formatShortDate(note.data.publishedAt)}</time>
+  <div class="note-main">
+    <h3 class="note-title"><a class="stretched-link" href={withBase(`/notes/${note.slug}`)}>{note.data.title}</a></h3>
+    {excerpt && <p class="note-excerpt">{note.data.description}</p>}
+    <p class="note-meta">
+      <span>{note.data.minutes} 分钟阅读</span>
+      {note.data.tags.slice(0, 3).map((tag) => <span>#{tag}</span>)}
+    </p>
+  </div>
 </article>

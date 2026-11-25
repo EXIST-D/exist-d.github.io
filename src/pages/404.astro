@@ -1,17 +1,17 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
 import { withBase } from '../utils/url';
 ---
 
 <BaseLayout title="页面未找到">
-  <section class="page-hero">
-    <div class="container">
-      <p class="eyebrow">404</p>
-      <h1>这个页面暂时不存在。</h1>
-      <p>可以回到首页继续查看项目作品和学习笔记。</p>
-      <div class="button-row">
-        <a class="button primary" href={withBase('/')}>返回首页</a>
-      </div>
+  <section class="container-narrow page-head not-found">
+    <p class="not-found-code" aria-hidden="true">404</p>
+    <h1 class="page-title">这个页面暂时不存在</h1>
+    <p class="page-desc">链接可能已经改变。可以回到首页，或者搜索一下你想找的内容。</p>
+    <div class="hero-actions">
+      <a class="button primary" href={withBase('/')}><Icon name="arrow-left" size={15} />返回首页</a>
+      <button type="button" class="button" data-open-search><Icon name="search" size={15} />搜索</button>
     </div>
   </section>
 </BaseLayout>

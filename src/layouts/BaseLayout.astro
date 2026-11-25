@@ -3,28 +3,27 @@ import StructuredData from '../components/StructuredData.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteSearch from '../components/SiteSearch.astro';
-import SiteEffects from '../components/SiteEffects.astro';
 import { siteConfig } from '../site.config';
 import { withBase } from '../utils/url';
 import '../styles/global.css';
+import '../styles/header.css';
 import 'katex/dist/katex.min.css';
 
 interface Props {
   title?: string;
   description?: string;
   structuredData?: Record<string, unknown> | Array<Record<string, unknown>>;
+  /** Show a thin reading-progress bar at the top (long-form pages). */
+  progress?: boolean;
+  /** Title shown in the header centre after scrolling (detail pages). */
+  headerTitle?: string;
+  headerKicker?: string;
 }
 
-const {
-  title = siteConfig.title,
-  description = siteConfig.description,
-  structuredData,
-} = Astro.props;
+const { title = siteConfig.title, description = siteConfig.description, structuredData, progress = false, headerTitle, headerKicker } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site ?? siteConfig.site).toString();
 const socialImage = new URL(withBase('/social-card.svg'), Astro.site ?? siteConfig.site).toString();
-const faviconPath = withBase('/favicon.svg');
-const manifestPath = withBase('/manifest.webmanifest');
 const defaultStructuredData = [
   {
     '@context': 'https://schema.org',
@@ -43,7 +42,6 @@ const defaultStructuredData = [
     sameAs: [siteConfig.github],
   },
 ];
-
 const allStructuredData = defaultStructuredData.concat(
   structuredData ? (Array.isArray(structuredData) ? structuredData : [structuredData]) : [],
 );
@@ -58,8 +56,9 @@ const allStructuredData = defaultStructuredData.concat(
     <meta name="description" content={description} />
     <meta name="robots" content="index,follow" />
     <link rel="canonical" href={canonical} />
-    <link rel="icon" type="image/svg+xml" href={faviconPath} />
-    <meta name="theme-color" content="#f3f4f6" />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141413" media="(prefers-color-scheme: dark)" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -70,14 +69,25 @@ const allStructuredData = defaultStructuredData.concat(
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImage} />
-    <link rel="manifest" href={manifestPath} />
+    <link rel="preconnect" href="https://avatars.githubusercontent.com" crossorigin />
+    <link rel="manifest" href={withBase('/manifest.webmanifest')} />
+    <link rel="alternate" type="application/rss+xml" title={siteConfig.title} href={withBase('/rss.xml')} />
+    <!-- Apply the saved theme before first paint to avoid a flash. -->
+    <script is:inline>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
     {allStructuredData.map((item) => <StructuredData data={item} />)}
   </head>
 
   <body>
     <a class="skip-link" href="#main-content">跳到主要内容</a>
-    <SiteEffects />
-    <SiteHeader />
+    {progress && <div class="read-progress" data-read-progress aria-hidden="true"></div>}
+    <SiteHeader title={headerTitle} kicker={headerKicker} />
     <SiteSearch />
     <main id="main-content" tabindex="-1">
       <slot />
@@ -85,3 +95,23 @@ const allStructuredData = defaultStructuredData.concat(
     <SiteFooter />
   </body>
 </html>
+
+<script>
+  const root = document.documentElement;
+  const bar = document.querySelector<HTMLElement>('[data-read-progress]');
+  let frame = 0;
+  function update() {
+    frame = 0;
+    const y = window.scrollY;
+    if (bar) {
+      const max = root.scrollHeight - window.innerHeight;
+      bar.style.transform = `scaleX(${max > 0 ? Math.min(1, y / max) : 0})`;
+    }
+  }
+  const schedule = () => {
+    if (!frame) frame = requestAnimationFrame(update);
+  };
+  addEventListener('scroll', schedule, { passive: true });
+  addEventListener('resize', schedule);
+  update();
+</script>

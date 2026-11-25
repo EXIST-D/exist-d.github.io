@@ -1,77 +1,106 @@
 ---
 import { getCollection, type CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Tag from '../../components/Tag.astro';
-import { siteConfig } from '../../site.config';
+import Icon from '../../components/Icon.astro';
+import { categoryLabel, siteConfig } from '../../site.config';
 import { withBase } from '../../utils/url';
 
 export async function getStaticPaths() {
-  const projects = await getCollection('projects', ({ data }) => !data.draft);
-
-  return projects.map((entry) => ({
+  const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
+  return projects.map((entry, index) => ({
     params: { slug: entry.slug },
-    props: { entry },
+    props: { entry, prev: projects[index - 1], next: projects[index + 1] },
   }));
 }
 
 interface Props {
   entry: CollectionEntry<'projects'>;
+  prev?: CollectionEntry<'projects'>;
+  next?: CollectionEntry<'projects'>;
 }
 
-const { entry } = Astro.props;
+const { entry, prev, next } = Astro.props;
+const { data } = entry;
 const { Content } = await entry.render();
-const title = `${entry.data.title} | ${siteConfig.name}`;
 const url = new URL(withBase(`/projects/${entry.slug}`), Astro.site ?? siteConfig.site).toString();
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'CreativeWork',
-  name: entry.data.title,
-  description: entry.data.description,
-  author: {
-    '@type': 'Person',
-    name: siteConfig.name,
-  },
+  name: data.title,
+  description: data.description,
+  author: { '@type': 'Person', name: siteConfig.name },
   url,
-  keywords: entry.data.stack.join(', '),
+  keywords: data.stack.join(', '),
 };
 ---
 
-<BaseLayout title={title} description={entry.data.description} structuredData={structuredData}>
-  <section class="page-hero">
-    <div class="container detail-shell">
-      <article>
-        <header class="post-header">
-          <a class="text-link back-link" href={withBase('/projects')}>← 全部项目</a>
-          <p class="eyebrow">项目案例 · {entry.data.status}</p>
-          <h1>{entry.data.title}</h1>
-          <p>{entry.data.description}</p>
-          <div class="project-meta">
-            <span>{entry.data.period}</span>
-            <span>{entry.data.role}</span>
-            <span>{entry.data.outcome}</span>
+<BaseLayout title={`${data.title} | ${siteConfig.name}`} description={data.description} structuredData={structuredData} progress headerTitle={data.title} headerKicker="项目">
+  <article class="container-narrow detail">
+    <header class="detail-head">
+      <a class="back-link" href={withBase('/projects')}><Icon name="arrow-left" size={15} />全部项目</a>
+      <div class="project-meta-line">
+        <span class="project-category">{categoryLabel(data.category)}</span>
+        <span class="project-status"><span class="status-dot" aria-hidden="true"></span>{data.status}</span>
+      </div>
+      <h1 class="detail-title">{data.title}</h1>
+      <p class="detail-desc">{data.description}</p>
+      {
+        (data.demo || data.repo) && (
+          <div class="detail-actions">
+            {data.demo && <a class="button primary" href={data.demo} target="_blank" rel="noreferrer"><Icon name="play" size={14} />在线体验</a>}
+            {data.repo && <a class="button" href={data.repo} target="_blank" rel="noreferrer"><Icon name="github" size={15} />源码仓库</a>}
           </div>
-          <div class="project-stack">
-            {entry.data.stack.map((item) => (
-              <Tag label={item} />
-            ))}
-          </div>
-          <div class="link-row">
-            {entry.data.demo && <a class="button primary" href={entry.data.demo} target="_blank" rel="noreferrer">在线体验</a>}
-            {entry.data.repo && <a class="button ghost" href={entry.data.repo} target="_blank" rel="noreferrer">源码仓库</a>}
-          </div>
-        </header>
-
-        {entry.data.image && (
-            <figure class="project-figure">
-              <img src={withBase(entry.data.image)} alt={entry.data.imageAlt ?? entry.data.title} width="1440" height="900" loading="eager" />
-              <figcaption>{entry.data.imageAlt}</figcaption>
-            </figure>
-        )}
-
-        <div class="prose">
-          <Content />
+        )
+      }
+      <dl class="fact-table">
+        <div><dt>时间</dt><dd>{data.period}</dd></div>
+        <div><dt>角色</dt><dd>{data.role}</dd></div>
+        <div><dt>成果</dt><dd>{data.outcome}</dd></div>
+        <div>
+          <dt>技术栈</dt>
+          <dd><ul class="tag-list">{data.stack.map((item) => <li class="tag">{item}</li>)}</ul></dd>
         </div>
-      </article>
+      </dl>
+    </header>
+
+    {
+      data.image && (
+        <figure class="detail-figure">
+          <img src={withBase(data.image)} alt={data.imageAlt ?? data.title} width="1440" height="900" loading="eager" />
+          {data.imageAlt && <figcaption>{data.imageAlt}</figcaption>}
+        </figure>
+      )
+    }
+
+    {
+      data.highlights.length > 0 && (
+        <ul class="highlight-list" aria-label="项目亮点">
+          {data.highlights.map((item) => <li>{item}</li>)}
+        </ul>
+      )
+    }
+
+    <div class="prose">
+      <Content />
     </div>
-  </section>
+
+    <nav class="pager" aria-label="其他项目">
+      {
+        prev ? (
+          <a class="pager-link" href={withBase(`/projects/${prev.slug}`)}>
+            <span>上一个项目</span>
+            <strong>{prev.data.title}</strong>
+          </a>
+        ) : <span />
+      }
+      {
+        next && (
+          <a class="pager-link is-next" href={withBase(`/projects/${next.slug}`)}>
+            <span>下一个项目</span>
+            <strong>{next.data.title}</strong>
+          </a>
+        )
+      }
+    </nav>
+  </article>
 </BaseLayout>

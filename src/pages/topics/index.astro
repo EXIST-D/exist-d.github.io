@@ -2,35 +2,36 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { siteConfig } from '../../site.config';
-import { getAllTopics } from '../../utils/content';
+import { getAllTopics, slugifyTag } from '../../utils/content';
 import { withBase } from '../../utils/url';
 
 const notes = (await getCollection('notes', ({ data }) => !data.draft)).sort(
   (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime(),
 );
-const topics = getAllTopics(notes);
+const topics = getAllTopics(notes).map((topic) => ({
+  ...topic,
+  notes: notes.filter((note) => note.data.tags.some((tag) => slugifyTag(tag) === topic.slug)),
+}));
 ---
 
-<BaseLayout title={`专题归档 | ${siteConfig.name}`} description="按主题浏览学习笔记，快速了解长期关注的技术方向。">
-  <section class="page-hero">
-    <div class="container">
-      <p class="eyebrow">专题</p>
-      <h1>专题归档</h1>
-      <p>按主题查阅项目记录、技术实践与学习笔记。</p>
-    </div>
-  </section>
+<BaseLayout title={`专题 | ${siteConfig.name}`} description="按主题浏览文章，快速了解长期关注的技术方向。">
+  <header class="container-narrow page-head">
+    <p class="eyebrow">Topics</p>
+    <h1 class="page-title">专题</h1>
+    <p class="page-desc">按主题查阅项目记录、技术实践与学习笔记。共 {topics.length} 个主题。</p>
+  </header>
 
-  <section class="section">
-    <div class="container">
-      <div class="topic-grid">
-        {topics.map((topic) => (
-          <a class="topic-card" href={withBase(`/topics/${topic.slug}`)}>
-            <p class="panel-label">专题</p>
-            <h2>{topic.name}</h2>
-            <p>{topic.count} 篇内容</p>
-          </a>
-        ))}
-      </div>
+  <section class="container-narrow section-tight">
+    <div class="topic-grid">
+      {
+        topics.map((topic) => (
+          <article class="topic-card">
+            <h2><a class="stretched-link" href={withBase(`/topics/${topic.slug}`)}><span aria-hidden="true">#</span>{topic.name}</a></h2>
+            <p class="topic-count">{topic.count} 篇</p>
+            <ul>{topic.notes.slice(0, 2).map((note) => <li>{note.data.title}</li>)}</ul>
+          </article>
+        ))
+      }
     </div>
   </section>
 </BaseLayout>

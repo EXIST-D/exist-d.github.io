@@ -1,8 +1,38 @@
 ---
-import { contactLinks, siteConfig } from '../site.config';
-import { resolveInternalHref } from '../utils/url';
+import { navLinks, siteConfig } from '../site.config';
+import { withBase } from '../utils/url';
+import Icon from './Icon.astro';
 ---
-<footer class="site-footer container">
-  <div class="footer-top"><a class="footer-brand" href={resolveInternalHref('/')}>{siteConfig.name}<span>EXIST-D</span></a><ul class="footer-links">{contactLinks.map((item) => <li><a href={resolveInternalHref(item.href)}>{item.label}</a></li>)}</ul></div>
-  <div class="footer-bottom"><span>© {new Date().getFullYear()} {siteConfig.name} · 个人博客与开源实践</span><span>用 Astro 构建，持续记录与更新。</span></div>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <div class="footer-about">
+      <a class="brand" href={withBase('/')}>
+        <img class="brand-avatar" src={siteConfig.avatar} alt="" width="32" height="32" loading="lazy" decoding="async" />
+        <span class="brand-name">{siteConfig.handle}</span>
+      </a>
+      <p>{siteConfig.headline}</p>
+      <div class="social-row">
+        <a class="social-link" href={siteConfig.github} target="_blank" rel="noreferrer" aria-label="GitHub"><Icon name="github" size={17} /></a>
+        <a class="social-link" href={`mailto:${siteConfig.email}`} aria-label="发送邮件"><Icon name="mail" size={17} /></a>
+        <a class="social-link" href={withBase('/rss.xml')} aria-label="RSS 订阅"><Icon name="rss" size={17} /></a>
+      </div>
+    </div>
+    <nav class="footer-nav" aria-label="页脚导航">
+      <p class="footer-label">站内</p>
+      <ul>{navLinks.map((item) => <li><a href={withBase(item.href)}>{item.label}</a></li>)}</ul>
+    </nav>
+    <div class="footer-nav">
+      <p class="footer-label">在线</p>
+      <ul>
+        <li><a href="https://exist.qd.je/" target="_blank" rel="noreferrer">在线刷题</a></li>
+        <li><a href="https://exist.qd.je/pixel/" target="_blank" rel="noreferrer">像素校园</a></li>
+        <li><a href={siteConfig.github} target="_blank" rel="noreferrer">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© {new Date().getFullYear()} {siteConfig.handle}</span>
+    <span>用 Astro 构建 · 托管于 GitHub Pages</span>
+  </div>
 </footer>

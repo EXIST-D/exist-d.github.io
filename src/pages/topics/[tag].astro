@@ -1,25 +1,20 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Tag from '../../components/Tag.astro';
+import NoteCard from '../../components/NoteCard.astro';
+import Icon from '../../components/Icon.astro';
 import { siteConfig } from '../../site.config';
 import { getAllTopics, slugifyTag } from '../../utils/content';
-import { formatDate } from '../../utils/format';
 import { withBase } from '../../utils/url';
-
-const notes = (await getCollection('notes', ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime(),
-);
-const topics = getAllTopics(notes);
 
 export async function getStaticPaths() {
   const notes = await getCollection('notes', ({ data }) => !data.draft);
   const topics = getAllTopics(notes);
-
   return topics.map((topic) => ({
     params: { tag: topic.slug },
     props: {
       topic,
+      topics,
       notes: notes
         .filter((entry) => entry.data.tags.some((tag) => slugifyTag(tag) === topic.slug))
         .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime()),
@@ -27,55 +22,28 @@ export async function getStaticPaths() {
   }));
 }
 
-const { topic, notes: topicNotes } = Astro.props;
+const { topic, topics, notes } = Astro.props;
 ---
 
-<BaseLayout title={`${topic.name} | ${siteConfig.name}`} description={`浏览 ${topic.name} 主题下的学习笔记与经验总结。`}>
-  <section class="page-hero">
-    <div class="container">
-      <p class="eyebrow">专题</p>
-      <h1>{topic.name}</h1>
-      <p>这里收集了与这个主题相关的公开笔记，方便按专题集中查看。</p>
-    </div>
-  </section>
+<BaseLayout title={`#${topic.name} | ${siteConfig.name}`} description={`浏览「${topic.name}」主题下的文章与经验总结。`}>
+  <header class="container-narrow page-head">
+    <a class="back-link" href={withBase('/topics')}><Icon name="arrow-left" size={15} />全部专题</a>
+    <h1 class="page-title"><span class="hash" aria-hidden="true">#</span>{topic.name}</h1>
+    <p class="page-desc">这个主题下共有 {topic.count} 篇文章。</p>
+  </header>
 
-  <section class="section">
-    <div class="container article-shell">
-      <div class="detail-shell">
-        <div class="entry-list">
-          {topicNotes.map((note) => (
-            <article class="entry-item">
-              <div class="entry-head">
-                <div>
-                  <p class="list-kicker">专题文章</p>
-                  <h3><a href={withBase(`/notes/${note.slug}`)}>{note.data.title}</a></h3>
-                </div>
-                <div class="entry-date">{formatDate(note.data.publishedAt)}</div>
-              </div>
-              <p>{note.data.description}</p>
-              <div class="entry-tags">
-                {note.data.tags.map((tag) => (
-                  <Tag label={tag} />
-                ))}
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
+  <section class="container-narrow section-tight">
+    <div class="note-list">{notes.map((note) => <NoteCard note={note} fullDate />)}</div>
 
-      <aside class="detail-sidebar">
-        <div class="page-panel">
-          <p class="panel-label">全部专题</p>
-          <div class="topic-cloud">
-            {topics.map((item) => (
-              <a class:list={['topic-link', item.slug === topic.slug && 'is-current']} href={withBase(`/topics/${item.slug}`)}>
-                <span>{item.name}</span>
-                <small>{item.count}</small>
-              </a>
-            ))}
-          </div>
-        </div>
-      </aside>
-    </div>
+    <nav class="other-topics" aria-label="其他专题">
+      <p class="footer-label">其他专题</p>
+      <ul class="topic-chips">
+        {
+          topics
+            .filter((item) => item.slug !== topic.slug)
+            .map((item) => <li><a class="topic-chip" href={withBase(`/topics/${item.slug}`)}>#{item.name}<span>{item.count}</span></a></li>)
+        }
+      </ul>
+    </nav>
   </section>
 </BaseLayout>

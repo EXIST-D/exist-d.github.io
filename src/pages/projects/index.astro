@@ -1,51 +1,206 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import ProjectCard from '../../components/ProjectCard.astro';
-import { projectCategories, siteConfig } from '../../site.config';
+import Icon from '../../components/Icon.astro';
+import { categoryLabel, projectCategories, siteConfig } from '../../site.config';
 import { withBase } from '../../utils/url';
 import homeData from '../../content/site/home.json';
 
 const projects = (await getCollection('projects', ({ data }) => !data.draft)).sort((a, b) => a.data.order - b.data.order);
+const pinned = projects.find((p) => p.slug === homeData.featuredProjects[0]) ?? projects[0];
+const categories = projectCategories
+  .map((c) => ({ ...c, count: projects.filter((p) => p.data.category === c.id).length }))
+  .filter((c) => c.count > 0);
+const stackCounts = new Map<string, number>();
+for (const p of projects) for (const s of p.data.stack) stackCounts.set(s, (stackCounts.get(s) ?? 0) + 1);
+const stacks = [...stackCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 12);
+const onlineCount = projects.filter((p) => p.data.demo).length;
 ---
 
-<BaseLayout title={`项目作品 | ${siteConfig.name}`} description="多人网页游戏、个人 Agent、文学 RAG、面试学习工具与医学统计自动化的项目案例。">
-  <section class="page-hero">
-    <div class="container">
-      <a class="breadcrumb" href={withBase('/')}>首页 <span>/</span> 项目</a>
-      <h1>项目作品<span class="page-title-en">Projects</span></h1>
-      <p>多人网页游戏、个人 Agent、学习工具与研究自动化。这里记录我做了什么，如何实现，以及仍在探索的问题。</p>
-      <div class="hero-live-links">
-        {homeData.onlineProducts.map((product) => <a class="hero-live-link" href={product.url} target="_blank" rel="noreferrer"><span class="live-dot" aria-hidden="true"></span>{product.name}</a>)}
+<BaseLayout title={`项目 | ${siteConfig.name}`} description="多人网页游戏、个人 Agent、文学 RAG、面试学习工具与医学统计自动化的项目案例。">
+  <div class="container posts-page">
+    <header class="posts-head">
+      <p class="posts-eyebrow">PROJECTS</p>
+      <h1 class="posts-title">项目</h1>
+    </header>
+
+    <div class="posts-layout">
+      <div class="posts-main">
+        <!-- Pinned -->
+        <article class="pinned-card" data-category={pinned.data.category}>
+          <p class="pinned-label">置顶</p>
+          <h2><a class="stretched-link" href={withBase(`/projects/${pinned.slug}`)}>{pinned.data.title}</a></h2>
+          <p class="pinned-desc">{pinned.data.description}</p>
+          <div class="pinned-foot">
+            <p class="row-meta">
+              <span>{pinned.data.status}</span>
+              <span class="row-cat">{categoryLabel(pinned.data.category)}</span>
+              {pinned.data.stack.slice(0, 3).map((s) => <span class="row-tag">{s}</span>)}
+            </p>
+            <p class="row-links">
+              {pinned.data.demo && <a href={pinned.data.demo} target="_blank" rel="noreferrer">在线体验</a>}
+              {pinned.data.repo && <a href={pinned.data.repo} target="_blank" rel="noreferrer">源码</a>}
+            </p>
+          </div>
+        </article>
+
+        <!-- Toolbar -->
+        <div class="posts-toolbar">
+          <span data-count>共 {projects.length} 个项目</span>
+          <div class="toolbar-right">
+            <button type="button" class="toolbar-toggle" data-online aria-pressed="false">
+              <Icon name="play" size={12} />只看可在线体验<span>{onlineCount}</span>
+            </button>
+            <span class="toolbar-sep" aria-hidden="true"></span>
+            <div class="toolbar-tabs" role="group" aria-label="列表视图">
+              <button type="button" data-view="compact" aria-pressed="true">紧凑</button>
+              <button type="button" data-view="detail" aria-pressed="false">详细</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- List -->
+        <ol class="row-list" data-list data-view-mode="compact">
+          {
+            projects.map((p) => (
+              <li
+                class="row"
+                data-row
+                data-category={p.data.category}
+                data-stack={p.data.stack.join('|')}
+                data-online={p.data.demo ? '1' : ''}
+                data-pinned={p.slug === pinned.slug ? '1' : undefined}
+                data-search={`${p.data.title} ${p.data.description} ${p.data.stack.join(' ')} ${categoryLabel(p.data.category)}`.toLowerCase()}
+              >
+                <h3 class="row-title"><a class="stretched-link" href={withBase(`/projects/${p.slug}`)}>{p.data.title}</a></h3>
+                <p class="row-desc">{p.data.description}</p>
+                {p.data.highlights.length > 0 && (
+                  <ul class="row-highlights">{p.data.highlights.map((h) => <li>{h}</li>)}</ul>
+                )}
+                <div class="row-foot">
+                  <p class="row-meta">
+                    <span>{p.data.period}</span>
+                    <span class="row-cat">{categoryLabel(p.data.category)}</span>
+                    {p.data.stack.slice(0, 2).map((s) => <span class="row-tag">{s}</span>)}
+                    {p.data.stack.length > 2 && <span class="row-more">+{p.data.stack.length - 2}</span>}
+                  </p>
+                  <p class="row-links">
+                    <span class="row-status">{p.data.status}</span>
+                    {p.data.demo && <a href={p.data.demo} target="_blank" rel="noreferrer">在线体验</a>}
+                    {p.data.repo && <a href={p.data.repo} target="_blank" rel="noreferrer">源码</a>}
+                  </p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+        <p class="row-empty" data-empty hidden>没有符合条件的项目。<button type="button" data-reset>清除筛选</button></p>
       </div>
+
+      <!-- Sidebar -->
+      <aside class="posts-aside">
+        <div class="aside-sticky">
+          <label class="aside-search">
+            <Icon name="search" size={15} />
+            <input type="search" placeholder="搜索" aria-label="搜索项目" data-query autocomplete="off" />
+          </label>
+
+          <p class="aside-label">方向</p>
+          <div class="chip-cloud" data-chips="category">
+            {categories.map((c) => <button type="button" class="chip" data-value={c.id}>{c.label}<span>({c.count})</span></button>)}
+          </div>
+
+          <p class="aside-label">技术栈</p>
+          <div class="chip-cloud" data-chips="stack">
+            {stacks.map(([name, count]) => <button type="button" class="chip" data-value={name}>{name}<span>({count})</span></button>)}
+          </div>
+
+          <button type="button" class="aside-link" data-reset>全部项目</button>
+          <a class="aside-link" href="#main-content"><Icon name="arrow-up" size={13} />回到顶部</a>
+        </div>
+      </aside>
     </div>
-  </section>
-  <section class="section">
-    <div class="container">
-      <div class="project-filters" role="group" aria-label="按项目方向筛选">
-        <button type="button" data-filter="all" aria-pressed="true">全部 <span>{projects.length}</span></button>
-        {projectCategories.map((category) => <button type="button" data-filter={category.id} aria-pressed="false">{category.label} <span>{projects.filter((project) => project.data.category === category.id).length}</span></button>)}
-      </div>
-      <p class="filter-summary" role="status" aria-live="polite">显示全部 {projects.length} 个项目</p>
-      <div class="all-projects">{projects.map((project) => <ProjectCard project={project} />)}</div>
-    </div>
-  </section>
+  </div>
 </BaseLayout>
 
 <script>
-  const filterGroup = document.querySelector('.project-filters');
-  const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-project-category]'));
-  const summary = document.querySelector('.filter-summary');
-  filterGroup?.addEventListener('click', (event) => {
-    const button = (event.target as Element).closest<HTMLButtonElement>('button[data-filter]');
-    if (!button) return;
-    const category = button.dataset.filter;
-    filterGroup.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
-    let count = 0;
-    cards.forEach((card) => {
-      card.hidden = category !== 'all' && card.dataset.projectCategory !== category;
-      if (!card.hidden) count += 1;
+  const list = document.querySelector<HTMLElement>('[data-list]')!;
+  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-row]'));
+  const countEl = document.querySelector<HTMLElement>('[data-count]')!;
+  const empty = document.querySelector<HTMLElement>('[data-empty]')!;
+  const query = document.querySelector<HTMLInputElement>('[data-query]')!;
+  const onlineBtn = document.querySelector<HTMLButtonElement>('[data-online]')!;
+  const state = { category: '', stack: '', q: '', online: false };
+
+  const params = new URLSearchParams(location.search);
+  state.category = params.get('category') ?? '';
+
+  function apply() {
+    const filtered = Boolean(state.category || state.stack || state.q || state.online);
+    let shown = 0;
+    for (const row of rows) {
+      const ok =
+        (!state.category || row.dataset.category === state.category) &&
+        (!state.stack || (row.dataset.stack ?? '').split('|').includes(state.stack)) &&
+        (!state.online || row.dataset.online === '1') &&
+        (!state.q || (row.dataset.search ?? '').includes(state.q));
+      // The pinned project already sits above the list; show it in the list only while filtering.
+      row.hidden = !ok || (!filtered && row.dataset.pinned === '1');
+      if (ok) shown += 1;
+    }
+    countEl.textContent = filtered ? `筛选出 ${shown} 个项目` : `共 ${rows.length} 个项目`;
+    empty.hidden = shown > 0;
+    document.querySelectorAll<HTMLButtonElement>('[data-chips="category"] .chip').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.value === state.category)));
+    document.querySelectorAll<HTMLButtonElement>('[data-chips="stack"] .chip').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.value === state.stack)));
+    onlineBtn.setAttribute('aria-pressed', String(state.online));
+    const url = new URL(location.href);
+    state.category ? url.searchParams.set('category', state.category) : url.searchParams.delete('category');
+    history.replaceState(null, '', url);
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-chips]').forEach((group) => {
+    group.addEventListener('click', (e) => {
+      const chip = (e.target as Element).closest<HTMLButtonElement>('.chip');
+      if (!chip) return;
+      const key = group.dataset.chips as 'category' | 'stack';
+      state[key] = state[key] === chip.dataset.value ? '' : (chip.dataset.value ?? '');
+      apply();
     });
-    if (summary) summary.textContent = category === 'all' ? `显示全部 ${count} 个项目` : `显示 ${count} 个${button.childNodes[0].textContent?.trim()}项目`;
   });
+  query.addEventListener('input', () => {
+    state.q = query.value.trim().toLowerCase();
+    apply();
+  });
+  onlineBtn.addEventListener('click', () => {
+    state.online = !state.online;
+    apply();
+  });
+  document.querySelectorAll('[data-reset]').forEach((b) =>
+    b.addEventListener('click', () => {
+      Object.assign(state, { category: '', stack: '', q: '', online: false });
+      query.value = '';
+      apply();
+    }),
+  );
+
+  // View mode: compact / detail, remembered in the URL and this browser.
+  const setView = (mode: string) => {
+    list.dataset.viewMode = mode;
+    document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === mode)));
+    try {
+      localStorage.setItem('projects-view', mode);
+    } catch {}
+    const url = new URL(location.href);
+    url.searchParams.set('view_mode', mode);
+    history.replaceState(null, '', url);
+  };
+  let initial = params.get('view_mode');
+  if (!initial) {
+    try {
+      initial = localStorage.getItem('projects-view');
+    } catch {}
+  }
+  document.querySelectorAll<HTMLButtonElement>('[data-view]').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view!)));
+  setView(initial === 'detail' ? 'detail' : 'compact');
+  apply();
 </script>

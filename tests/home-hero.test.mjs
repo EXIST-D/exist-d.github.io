@@ -1,37 +1,40 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 
-const homeData = readFileSync(new URL('../src/content/site/home.json', import.meta.url), 'utf8');
-const settings = readFileSync(new URL('../src/content/site/settings.json', import.meta.url), 'utf8');
-const homePage = readFileSync(new URL('../src/pages/index.astro', import.meta.url), 'utf8');
-const styles = readFileSync(new URL('../src/styles/global.css', import.meta.url), 'utf8');
+const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
+const homeData = JSON.parse(read('../src/content/site/home.json'));
+const settings = JSON.parse(read('../src/content/site/settings.json'));
+const homePage = read('../src/pages/index.astro');
+const styles = read('../src/styles/global.css');
+const projectSlugs = readdirSync(new URL('../src/content/projects/', import.meta.url)).map((file) => file.replace(/\.md$/, ''));
 
-test('replaces the template hero copy with a personal profile', () => {
-  assert.doesNotMatch(homeData, /"heroEyebrow"/);
-  assert.match(homeData, /"heroProfile"/);
-  assert.match(homeData, /中国地质大学（北京）应用统计专业硕士研究生/);
-  assert.match(homePage, /class="hero-profile"/);
+test('home hero opens with the GitHub handle and avatar', () => {
+  assert.equal(settings.handle, 'EXIST-D');
+  assert.match(settings.avatar, /^https:\/\/avatars\.githubusercontent\.com\//);
+  assert.match(homePage, /siteConfig\.handle/);
+  assert.match(homePage, /siteConfig\.avatar/);
+  assert.equal(homeData.hero.description, '应用统计硕士在读，致力于将想法构建成可以使用的工具');
+  assert.equal(settings.name, 'EXIST-D');
+  assert.doesNotMatch(JSON.stringify(homeData), /王明旭/);
 });
 
-test('preserves the supplied technical-stack content and compact project statistics', () => {
-  assert.match(settings, /"techHighlights"/);
-  assert.match(settings, /"Agent 应用开发"/);
-  assert.match(settings, /"向量检索和 RAG"/);
-  assert.match(homePage, /stat-grid-compact/);
-  assert.match(styles, /\.stat-grid-compact/);
+test('featured projects on the home page all exist', () => {
+  assert.ok(homeData.featuredProjects.length > 0);
+  for (const slug of homeData.featuredProjects) assert.ok(projectSlugs.includes(slug), `missing project: ${slug}`);
 });
 
-test('exposes the GitHub profile alongside the personal introduction', () => {
-  assert.match(homePage, /class="hero-github"/);
-  assert.match(homePage, /href=\{siteConfig\.github\}/);
+test('exposes the GitHub profile and keeps the technical stack content', () => {
+  assert.match(homePage, /href: siteConfig\.github/);
+  assert.ok(settings.techHighlights.some((item) => item.title === 'Agent 应用开发'));
+  assert.ok(settings.techHighlights.some((item) => item.title === '向量检索和 RAG'));
 });
 
-test('uses concise project and personal-section copy', () => {
-  assert.match(settings, /"role":\s+"AI应用开发\/大模型开发\/数据工程方向求职者"/);
-  assert.match(homeData, /"title": "项目案例展示"/);
-  assert.match(homeData, /"eyebrow": "关于我"/);
-  assert.match(homeData, /"title": "关于我的更多信息"/);
-  assert.doesNotMatch(homeData, /每个项目页都强调目标、技术方案/);
-  assert.doesNotMatch(homeData, /你可以把简历里写不下的内容展开在这里/);
+test('supports light and dark themes', () => {
+  assert.match(styles, /prefers-color-scheme: dark/);
+  assert.match(styles, /:root\[data-theme='dark'\]/);
+});
+
+test('never uses the up-right arrow for external links', () => {
+  assert.doesNotMatch(styles + homePage, /↗/);
 });

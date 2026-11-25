@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="王明旭的博客">
-  <rect width="64" height="64" rx="16" fill="#3566cf"/>
-  <path d="m10 18 7 28h7l6-20 6 20h7l7-28h-7l-4 20-6-20h-6l-6 20-4-20z" fill="#fff"/>
-  <circle cx="52" cy="46" r="3" fill="#bdd4ff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="EXIST-D 的博客">
+  <style>rect{fill:#1f1d1a}text{fill:#fbfaf7}@media (prefers-color-scheme:dark){rect{fill:#ecebe6}text{fill:#141413}}</style>
+  <rect width="64" height="64" rx="18"/>
+  <text x="32" y="44" text-anchor="middle" font-size="36" font-weight="800" font-family="Manrope, -apple-system, Helvetica, Arial, sans-serif">E</text>
 </svg>

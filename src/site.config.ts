@@ -3,6 +3,8 @@ import siteData from './content/site/settings.json';
 export const siteConfig = {
   site: siteData.site,
   name: siteData.name,
+  handle: siteData.handle,
+  avatar: siteData.avatar,
   role: siteData.role,
   headline: siteData.headline,
   title: siteData.title,
@@ -16,14 +18,17 @@ export const siteConfig = {
 };
 
 export const navLinks = [
-  { href: '/', label: '首页' },
-  { href: '/projects', label: '项目' },
-  { href: '/notes', label: '笔记' },
-  { href: '/topics', label: '专题' },
-  { href: '/about', label: '关于' },
+  { href: '/', label: '首页', icon: 'home' },
+  { href: '/projects', label: '项目', icon: 'flask' },
+  { href: '/notes', label: '文章', icon: 'pen' },
+  { href: '/topics', label: '专题', icon: 'hash' },
+  { href: '/about', label: '关于', icon: 'user' },
 ];
 
 export const techHighlights = siteData.techHighlights;
+export const principles = siteData.principles;
+export const contactLinks = siteData.contactLinks;
+
 export const projectCategories = [
   { id: 'agent', label: 'Agent 与 RAG' },
   { id: 'skills', label: 'Agent Skills' },
@@ -31,7 +36,19 @@ export const projectCategories = [
   { id: 'tools', label: '桌面工具' },
   { id: 'game', label: '网页游戏' },
 ] as const;
-export const skillGroups = siteData.skillGroups;
-export const principles = siteData.principles;
-export const timeline = siteData.timeline;
-export const contactLinks = siteData.contactLinks;
+
+/** Short monogram used on project covers that have no screenshot. */
+export const projectSymbols: Record<string, string> = {
+  pixelcampus: '像',
+  weijin: '未',
+  'interview-bank': 'IB',
+  gleaner: '穗',
+  medstatforge: 'M',
+  'medical-analysis-orchestrator': 'Rx',
+  'spss-academic-workflow': 'S',
+  floatnote: '笺',
+};
+
+export function categoryLabel(id: string) {
+  return projectCategories.find((item) => item.id === id)?.label ?? '项目';
+}

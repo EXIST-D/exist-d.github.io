@@ -1,21 +1,41 @@
 {
-  "heroProfile": [
-    {
-      "icon": "🎓",
-      "text": "中国地质大学（北京）应用统计专业硕士研究生，预计 2028 年毕业"
-    },
-    {
-      "icon": "🔬",
-      "text": "研究兴趣：AI 应用开发、Agent 构建、机器学习与深度学习"
-    },
-    {
-      "icon": "🤖",
-      "text": "当前关注：个人 Agent、文学 RAG、面试学习工具与研究流程自动化"
-    },
-    {
-      "icon": "📊",
-      "text": "常用工具：R、Python"
-    }
+  "hero": {
+    "greeting": "嗨，我是",
+    "role": [
+      {
+        "text": "专注 AI 应用与 Agent 的 "
+      },
+      {
+        "text": "<Developer />",
+        "code": true
+      }
+    ],
+    "description": "应用统计硕士在读，致力于将想法构建成可以使用的工具",
+    "quote": "人生是旷野。",
+    "facts": [
+      {
+        "label": "在读",
+        "text": "中国地质大学（北京）应用统计专业硕士研究生，预计 2028 年毕业"
+      },
+      {
+        "label": "方向",
+        "text": "AI 应用开发、Agent 构建、机器学习与深度学习"
+      },
+      {
+        "label": "关注",
+        "text": "个人 Agent、文学 RAG、面试学习工具与研究流程自动化"
+      },
+      {
+        "label": "工具",
+        "text": "Python、R、SQL，日常用 Claude Code 与 Codex 辅助开发"
+      }
+    ]
+  },
+  "featuredProjects": [
+    "pixelcampus",
+    "weijin",
+    "interview-bank",
+    "gleaner"
   ],
   "nowSection": {
     "title": "正在做的事",
@@ -43,26 +63,19 @@
       }
     ]
   },
-  "projectSection": {
-    "eyebrow": "精选项目",
-    "title": "项目案例展示"
-  },
-  "notesSection": {
-    "eyebrow": "学习笔记",
-    "title": "实践中的思考与记录",
-    "body": "记录项目里的设计选择、问题拆解与学习过程。"
-  },
   "aboutSection": {
-    "eyebrow": "关于我",
-    "title": "关于我的更多信息",
-    "summary": "我是王明旭，中国地质大学（北京）应用统计专业硕士研究生。我的实践从统计分析延伸到 AI 应用开发，近期围绕个人 Agent、检索增强生成与面试学习工具持续开发。",
-    "interests": ["AI Agent 与大模型应用", "检索增强生成与知识管理", "统计分析与研究流程自动化"]
+    "summary": "我目前在中国地质大学（北京）攻读应用统计专业硕士。我的实践从统计分析延伸到 AI 应用开发，近期围绕个人 Agent、检索增强生成与面试学习工具持续开发。",
+    "interests": [
+      "AI Agent 与大模型应用",
+      "检索增强生成与知识管理",
+      "统计分析与研究流程自动化"
+    ]
   },
   "onlineProducts": [
     {
       "name": "PixelCampus · 像素校园",
       "symbol": "像",
-      "tone": "green",
+      "tone": "game",
       "status": "持续运营",
       "url": "https://exist.qd.je/pixel/",
       "description": "在像素校园里散步、钓鱼、找猫，也能和其他玩家一起逛校园。",
@@ -71,7 +84,7 @@
     {
       "name": "Interview Bank 在线版",
       "symbol": "IB",
-      "tone": "blue",
+      "tone": "skills",
       "status": "公开测试中",
       "url": "https://exist.qd.je/",
       "description": "利用碎片时间读一道面试题。公开资料免登录，笔记与复习记录需登录。",
