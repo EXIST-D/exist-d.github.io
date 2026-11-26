@@ -203,7 +203,6 @@
 .now-timeline strong { font-size: 15.5px; font-weight: 600; }
 .now-timeline a:hover strong { color: var(--accent-text); }
 .now-timeline span { font-size: 14px; line-height: 1.7; color: var(--text-2); }
-.topic-chips.compact { margin-top: 24px; gap: 6px; }
 
 .more-line.center { justify-content: center; }
 

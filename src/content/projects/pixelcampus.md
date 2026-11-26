@@ -9,7 +9,7 @@ category: game
 status: 持续运营
 role: 发起、核心开发与线上运营
 outcome: 上线可直接游玩的浏览器版本，持续维护联机服务和玩家档案。
-demo: https://exist.qd.je/pixel/
+demo: https://huepixel.top/pixel/
 repo: https://github.com/EXIST-D/PixelCampus
 image: /images/pixelcampus-south-gate.webp
 imageAlt: PixelCampus 离线试玩截图：角色走过傍晚的南门广场，左下角是校园小地图。
@@ -35,6 +35,6 @@ GitHub 仓库公开的是客户端、地图工具和共享规则。联机服务�
 
 ## 继续查看
 
-- [进入像素校园](https://exist.qd.je/pixel/)
+- [进入像素校园](https://huepixel.top/pixel/)
 - [阅读 PixelCampus 开发与运营记录](/exist.github.io/notes/pixelcampus-operations/)
 - [源码、操作说明与玩法清单](https://github.com/EXIST-D/PixelCampus)

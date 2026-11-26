@@ -4,7 +4,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ProjectCard from '../components/ProjectCard.astro';
 import Icon from '../components/Icon.astro';
 import { siteConfig } from '../site.config';
-import { slugifyTag } from '../utils/content';
 import { formatIsoDate } from '../utils/format';
 import { withBase } from '../utils/url';
 import homeData from '../content/site/home.json';
@@ -41,7 +40,7 @@ const socials = [
   { label: '邮箱', href: `mailto:${siteConfig.email}`, icon: 'mail', color: '#D44638' },
   { label: 'RSS', href: withBase('/rss.xml'), icon: 'rss', color: '#F08A00' },
   { label: '在线刷题', href: 'https://exist.qd.je/', icon: 'book', color: '#2f7a63', external: true },
-  { label: '像素校园', href: 'https://exist.qd.je/pixel/', icon: 'gamepad', color: '#5b6cf0', external: true },
+  { label: '像素校园', href: 'https://huepixel.top/pixel/', icon: 'gamepad', color: '#5b6cf0', external: true },
 ];
 
 const windsock = [
@@ -50,7 +49,7 @@ const windsock = [
   { title: '按专题逛逛', href: withBase('/topics'), icon: 'hash' },
   { title: '认识一下我', href: withBase('/about'), icon: 'user' },
   { title: '刷一道面试题', href: 'https://exist.qd.je/', icon: 'book', external: true },
-  { title: '去像素校园散步', href: 'https://exist.qd.je/pixel/', icon: 'gamepad', external: true },
+  { title: '去像素校园散步', href: 'https://huepixel.top/pixel/', icon: 'gamepad', external: true },
 ];
 ---
 
@@ -162,13 +161,6 @@ const windsock = [
             ))
           }
         </ol>
-        <ul class="topic-chips compact" aria-label="热门专题">
-          {
-            Array.from(new Set(notes.flatMap((note) => note.data.tags)))
-              .slice(0, 6)
-              .map((tag) => <li><a class="topic-chip" href={withBase(`/topics/${slugifyTag(tag)}`)}>#{tag}</a></li>)
-          }
-        </ul>
       </div>
     </div>
   </section>
