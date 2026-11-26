@@ -12,6 +12,8 @@ export const siteConfig = {
   intro: siteData.intro,
   email: siteData.email,
   github: siteData.github,
+  xiaohongshu: siteData.xiaohongshu,
+  bilibili: siteData.bilibili,
   resumeUrl: siteData.resumeUrl,
   location: siteData.location,
   availability: siteData.availability,
