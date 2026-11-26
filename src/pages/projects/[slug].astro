@@ -2,6 +2,8 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
+import ArticleAside from '../../components/ArticleAside.astro';
+import ArticleActions from '../../components/ArticleActions.astro';
 import { categoryLabel, siteConfig } from '../../site.config';
 import { withBase } from '../../utils/url';
 
@@ -21,7 +23,7 @@ interface Props {
 
 const { entry, prev, next } = Astro.props;
 const { data } = entry;
-const { Content } = await entry.render();
+const { Content, headings } = await entry.render();
 const url = new URL(withBase(`/projects/${entry.slug}`), Astro.site ?? siteConfig.site).toString();
 const structuredData = {
   '@context': 'https://schema.org',
@@ -35,7 +37,8 @@ const structuredData = {
 ---
 
 <BaseLayout title={`${data.title} | ${siteConfig.name}`} description={data.description} structuredData={structuredData} progress headerTitle={data.title} headerKicker="项目">
-  <article class="container-narrow detail">
+  <div class="container article-layout has-aside">
+  <article class="detail">
     <header class="detail-head">
       <a class="back-link" href={withBase('/projects')}><Icon name="arrow-left" size={15} />全部项目</a>
       <div class="project-meta-line">
@@ -84,6 +87,8 @@ const structuredData = {
       <Content />
     </div>
 
+    <ArticleActions />
+
     <nav class="pager" aria-label="其他项目">
       {
         prev ? (
@@ -103,4 +108,7 @@ const structuredData = {
       }
     </nav>
   </article>
+
+  <ArticleAside headings={headings} title={data.title} url={url} />
+  </div>
 </BaseLayout>

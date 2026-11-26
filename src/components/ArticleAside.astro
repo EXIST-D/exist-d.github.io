@@ -1,0 +1,199 @@
+---
+/**
+ * Right-hand rail for long pages (articles and projects): table of contents,
+ * reading progress, like and share. Also renders the share dialog once.
+ * Layout and button behaviour follow the Shiro theme; independent implementation.
+ */
+import QRCode from 'qrcode';
+import Icon from './Icon.astro';
+import { siteConfig } from '../site.config';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+interface Props {
+  headings: Heading[];
+  title: string;
+  /** Absolute URL of this page (used for sharing and the QR code). */
+  url: string;
+}
+const { headings, title } = Astro.props;
+const url = Astro.props.url.endsWith('/') ? Astro.props.url : `${Astro.props.url}/`;
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const qr = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#1f1d1a', light: '#ffffff' } });
+const shareText = `我在 ${siteConfig.handle} 的博客读到「${title}」，推荐给你：`;
+---
+
+<aside class="article-aside" aria-label="目录与操作">
+  <div class="aside-inner">
+    {
+      toc.length > 1 && (
+        <nav class="toc" aria-label="目录">
+          <p class="toc-label">目录</p>
+          <ol>
+            {toc.map((heading) => (
+              <li class:list={{ 'is-sub': heading.depth === 3 }}>
+                <a href={`#${heading.slug}`} data-toc-link={heading.slug}>{heading.text}</a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+
+    <p class="read-meter" aria-hidden="true">
+      <svg viewBox="0 0 20 20" width="16" height="16"><circle cx="10" cy="10" r="8" /><circle cx="10" cy="10" r="8" data-read-ring /></svg>
+      <span data-read-percent>0%</span>
+    </p>
+
+    <div class="aside-actions">
+      <button type="button" class="aside-action like" data-like aria-label="点赞" aria-pressed="false" data-tip="点赞">
+        <Icon name="thumb-up" size={20} />
+      </button>
+      <button type="button" class="aside-action share" data-share aria-label="分享" data-tip="分享">
+        <Icon name="share" size={20} />
+      </button>
+      <a class="aside-action" href="#main-content" aria-label="回到顶部" data-tip="回到顶部">
+        <Icon name="arrow-up" size={20} />
+      </a>
+    </div>
+  </div>
+</aside>
+
+<dialog class="share-dialog" data-share-dialog data-url={url} data-title={title} data-text={shareText} aria-label="分享此内容">
+  <div class="share-panel">
+    <header class="share-head">
+      <strong>分享此内容</strong>
+      <button type="button" class="share-close" data-share-close aria-label="关闭"><Icon name="close" size={18} /></button>
+    </header>
+    <div class="share-body">
+      <figure class="share-qr">
+        <Fragment set:html={qr} />
+        <figcaption>微信扫一扫</figcaption>
+      </figure>
+      <div class="share-list">
+        <p class="share-to">分享到…</p>
+        <button type="button" data-share-to="copy"><span class="share-ico copy"><Icon name="link" size={16} /></span>复制链接</button>
+        <button type="button" data-share-to="weibo"><span class="share-ico weibo">微</span>新浪微博</button>
+        <button type="button" data-share-to="qzone"><span class="share-ico qzone">Q</span>QQ 空间</button>
+        <button type="button" data-share-to="x"><span class="share-ico x">𝕏</span>X (Twitter)</button>
+      </div>
+    </div>
+    <p class="share-url">{url}</p>
+  </div>
+</dialog>
+
+<script>
+  /* ---------- tiny toast ---------- */
+  let toastTimer = 0;
+  function toast(text: string) {
+    let el = document.querySelector<HTMLElement>('.site-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'site-toast';
+      el.setAttribute('role', 'status');
+      document.body.append(el);
+    }
+    el.textContent = text;
+    el.classList.add('is-on');
+    clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => el!.classList.remove('is-on'), 2200);
+  }
+
+  /* ---------- like: each visitor can like a page once (remembered in this browser) ---------- */
+  const likeKey = `liked:${location.pathname.replace(/\/+$/, '')}`;
+  const isLiked = () => {
+    try {
+      return localStorage.getItem(likeKey) === '1';
+    } catch {
+      return false;
+    }
+  };
+  const likeButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-like]'));
+  const syncLikes = () => likeButtons.forEach((b) => b.setAttribute('aria-pressed', String(isLiked())));
+  likeButtons.forEach((button) =>
+    button.addEventListener('click', () => {
+      button.classList.remove('pop');
+      void button.offsetWidth; // restart the animation
+      button.classList.add('pop');
+      if (isLiked()) {
+        toast('你已经点过赞啦，谢谢！');
+        return;
+      }
+      try {
+        localStorage.setItem(likeKey, '1');
+      } catch {}
+      syncLikes();
+      toast('谢谢你的喜欢！');
+    }),
+  );
+  syncLikes();
+
+  /* ---------- share: native share sheet on phones, dialog with QR code elsewhere ---------- */
+  const dialog = document.querySelector<HTMLDialogElement>('[data-share-dialog]');
+  if (dialog) {
+    const { url = location.href, title = document.title, text = '' } = dialog.dataset;
+    const enc = encodeURIComponent;
+    const targets: Record<string, () => void> = {
+      copy: async () => {
+        try {
+          await navigator.clipboard.writeText(url);
+          toast('链接已复制');
+        } catch {
+          toast('复制失败，请手动复制下方链接');
+        }
+      },
+      weibo: () => window.open(`https://service.weibo.com/share/share.php?url=${enc(url)}&title=${enc(text + title)}`, '_blank', 'noopener'),
+      qzone: () => window.open(`https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=${enc(url)}&title=${enc(title)}&summary=${enc(text)}`, '_blank', 'noopener'),
+      x: () => window.open(`https://twitter.com/intent/tweet?url=${enc(url)}&text=${enc(text + title)}`, '_blank', 'noopener'),
+    };
+    dialog.querySelectorAll<HTMLButtonElement>('[data-share-to]').forEach((b) => b.addEventListener('click', () => targets[b.dataset.shareTo!]?.()));
+    dialog.querySelector('[data-share-close]')?.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    const coarse = window.matchMedia('(pointer: coarse)').matches;
+    document.querySelectorAll('[data-share]').forEach((b) =>
+      b.addEventListener('click', async () => {
+        if (coarse && 'share' in navigator) {
+          try {
+            await navigator.share({ title, text, url });
+            return;
+          } catch (err) {
+            if ((err as DOMException)?.name === 'AbortError') return;
+          }
+        }
+        dialog.showModal();
+      }),
+    );
+  }
+
+  /* ---------- reading progress + active TOC entry ---------- */
+  const article = document.querySelector<HTMLElement>('.detail');
+  const ring = document.querySelector<SVGCircleElement>('[data-read-ring]');
+  const percent = document.querySelector<HTMLElement>('[data-read-percent]');
+  const links = new Map(Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')).map((l) => [l.dataset.tocLink, l]));
+  const headings = Array.from(document.querySelectorAll<HTMLElement>('.prose h2[id], .prose h3[id]')).filter((h) => links.has(h.id));
+  const CIRC = 2 * Math.PI * 8;
+  if (ring) ring.style.strokeDasharray = `${CIRC}`;
+  let frame = 0;
+  const update = () => {
+    frame = 0;
+    if (article && ring && percent) {
+      const rect = article.getBoundingClientRect();
+      const total = rect.height - window.innerHeight * 0.6;
+      const p = Math.min(1, Math.max(0, -rect.top / Math.max(1, total)));
+      ring.style.strokeDashoffset = `${CIRC * (1 - p)}`;
+      percent.textContent = `${Math.round(p * 100)}%`;
+    }
+    if (headings.length) {
+      let current = headings[0].id;
+      for (const h of headings) if (h.getBoundingClientRect().top < 140) current = h.id;
+      links.forEach((link, id) => link.toggleAttribute('aria-current', id === current));
+    }
+  };
+  addEventListener('scroll', () => (frame ||= requestAnimationFrame(update)), { passive: true });
+  update();
+</script>

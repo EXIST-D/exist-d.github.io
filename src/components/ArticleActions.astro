@@ -1,0 +1,9 @@
+---
+/** Like / share row shown at the end of an article on screens where the side rail is hidden. Behaviour lives in ArticleAside. */
+import Icon from './Icon.astro';
+---
+
+<div class="inline-actions" aria-label="点赞与分享">
+  <button type="button" class="inline-action like" data-like aria-pressed="false"><Icon name="thumb-up" size={17} /><span>点赞</span></button>
+  <button type="button" class="inline-action" data-share><Icon name="share" size={17} /><span>分享</span></button>
+</div>

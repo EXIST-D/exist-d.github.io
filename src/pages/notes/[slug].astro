@@ -2,6 +2,8 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Icon from '../../components/Icon.astro';
+import ArticleAside from '../../components/ArticleAside.astro';
+import ArticleActions from '../../components/ArticleActions.astro';
 import { siteConfig } from '../../site.config';
 import { getRelatedNotes, slugifyTag } from '../../utils/content';
 import { formatDate } from '../../utils/format';
@@ -27,7 +29,6 @@ interface Props {
 const { entry, newer, older, related } = Astro.props;
 const { data } = entry;
 const { Content, headings } = await entry.render();
-const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 const url = new URL(withBase(`/notes/${entry.slug}`), Astro.site ?? siteConfig.site).toString();
 const structuredData = {
   '@context': 'https://schema.org',
@@ -44,7 +45,7 @@ const relatedOnly = related.filter((note) => note.slug !== newer?.slug && note.s
 ---
 
 <BaseLayout title={`${data.title} | ${siteConfig.name}`} description={data.description} structuredData={structuredData} progress headerTitle={data.title} headerKicker="文章">
-  <div class:list={['container', 'article-layout', toc.length > 1 && 'has-toc']}>
+  <div class="container article-layout has-aside">
     <article class="detail">
       <header class="detail-head">
         <a class="back-link" href={withBase('/notes')}><Icon name="arrow-left" size={15} />全部文章</a>
@@ -65,6 +66,7 @@ const relatedOnly = related.filter((note) => note.slug !== newer?.slug && note.s
       </div>
 
       <footer class="detail-foot">
+        <ArticleActions />
         <div class="author-card">
           <img class="author-avatar" src={siteConfig.avatar} alt="" width="52" height="52" loading="lazy" decoding="async" />
           <div>
@@ -113,39 +115,6 @@ const relatedOnly = related.filter((note) => note.slug !== newer?.slug && note.s
       </footer>
     </article>
 
-    {
-      toc.length > 1 && (
-        <aside class="toc" aria-label="文章目录">
-          <p class="toc-label">目录</p>
-          <ol>
-            {toc.map((heading) => (
-              <li class:list={{ 'is-sub': heading.depth === 3 }}>
-                <a href={`#${heading.slug}`} data-toc-link={heading.slug}>{heading.text}</a>
-              </li>
-            ))}
-          </ol>
-          <a class="toc-top" href="#main-content"><Icon name="arrow-up" size={14} />回到顶部</a>
-        </aside>
-      )
-    }
+    <ArticleAside headings={headings} title={data.title} url={url} />
   </div>
 </BaseLayout>
-
-<script>
-  // Highlight the table-of-contents entry for the section being read.
-  const links = new Map(
-    Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')).map((link) => [link.dataset.tocLink, link]),
-  );
-  if (links.size) {
-    const headings = Array.from(document.querySelectorAll<HTMLElement>('.prose h2[id], .prose h3[id]')).filter((h) => links.has(h.id));
-    const update = () => {
-      let current = headings[0]?.id;
-      for (const heading of headings) {
-        if (heading.getBoundingClientRect().top < 140) current = heading.id;
-      }
-      links.forEach((link, id) => link.toggleAttribute('aria-current', id === current));
-    };
-    addEventListener('scroll', update, { passive: true });
-    update();
-  }
-</script>
