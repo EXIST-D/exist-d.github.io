@@ -45,9 +45,9 @@
 .header-brand:hover img { transform: rotate(-12deg) scale(1.05); }
 
 .header-meta {
-  position: absolute; left: 50%; top: 0; bottom: 0;
-  width: min(520px, 44vw);
-  transform: translate(-50%, calc((1 - var(--bg-opacity)) * 8px));
+  /* Sits in the gap between the wordmark and the right-hand nav. */
+  position: absolute; left: 210px; right: 480px; top: 0; bottom: 0;
+  transform: translateY(calc((1 - var(--bg-opacity)) * 8px));
   display: flex; flex-direction: column; justify-content: center; align-items: center;
   opacity: var(--bg-opacity);
   pointer-events: none;
@@ -244,9 +244,12 @@ kbd {
   pointer-events: none;
 }
 
+@media (max-width: 1023px) {
+  .header-meta { display: none; }
+}
 @media (max-width: 860px) {
   .header-inner { padding: 0 16px; }
-  .header-nav, .header-divider, .header-meta { display: none; }
+  .header-nav, .header-divider { display: none; }
   .drawer-toggle { display: inline-grid; }
   .header-brand { font-size: 18px; }
 }
