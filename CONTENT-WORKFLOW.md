@@ -96,7 +96,7 @@ public/images/
 Markdown 中引用：
 
 ```md
-![图片说明](/exist.github.io/uploads/example.png)
+![图片说明](/uploads/example.png)
 ```
 
 ## 发布前检查

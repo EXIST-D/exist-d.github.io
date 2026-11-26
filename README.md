@@ -4,7 +4,7 @@
 
 线上地址：
 
-- `https://exist-d.github.io/exist.github.io/`
+- `https://exist-d.github.io/`
 
 ## 当前维护方式
 

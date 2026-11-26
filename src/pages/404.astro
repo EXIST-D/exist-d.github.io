@@ -5,6 +5,17 @@ import { withBase } from '../utils/url';
 ---
 
 <BaseLayout title="页面未找到">
+  <!-- The site used to live under /exist.github.io/; send old links to the same page at the root. -->
+  <script is:inline>
+    (function () {
+      var prefix = '/exist.github.io';
+      var path = location.pathname;
+      if (path === prefix || path.indexOf(prefix + '/') === 0) {
+        document.documentElement.style.visibility = 'hidden';
+        location.replace((path.slice(prefix.length) || '/') + location.search + location.hash);
+      }
+    })();
+  </script>
   <section class="container-narrow page-head not-found">
     <p class="not-found-code" aria-hidden="true">404</p>
     <h1 class="page-title">这个页面暂时不存在</h1>

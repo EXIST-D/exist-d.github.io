@@ -1,44 +1,37 @@
 # GitHub Pages 发布流程
 
-当前站点部署在 GitHub Pages。
+当前站点部署在 GitHub Pages，是 EXIST-D 账号的用户主页（User Site）。
 
 仓库地址：
 
-- `https://github.com/EXIST-D/exist.github.io`
+- `https://github.com/EXIST-D/exist-d.github.io`
 
 线上地址：
 
-- `https://exist-d.github.io/exist.github.io/`
+- `https://exist-d.github.io/`
 
 ## 自动发布
 
-`.github/workflows/deploy.yml` 会在 `main` 分支收到新提交后自动执行：
+`.github/workflows/deploy.yml` 会在 `main` 分支收到新提交后自动执行：安装依赖 → `npm run build` → 上传 `dist` → 发布到 GitHub Pages。
 
-1. 安装依赖
-2. 运行 `npm run build`
-3. 上传 `dist`
-4. 发布到 GitHub Pages
+仓库的 Settings → Pages → Source 设为 **GitHub Actions**（不再使用「Deploy from a branch」）。
 
 ## 本地发布流程
 
-```bash
-cd D:\User\Desktop\exist.github.io
-npm run build
-git add .
-git commit -m "Update site"
-git push origin main
-```
-
-推送后打开 GitHub 仓库的 `Actions` 页面，等待部署任务完成。
+1. `npm run build` 确认构建通过
+2. 提交，提交信息带 `EX-` 编号，例如 `EX-12: 修改说明`
+3. `git push origin main`，然后在仓库的 `Actions` 页面等部署完成
 
 ## 路径说明
 
-这个仓库作为项目页部署，站点使用 `/exist.github.io/` 作为 base path。
+仓库名与用户名一致（`exist-d.github.io`），所以站点直接部署在根路径，`astro.config.mjs` 里不设置 `base`。
 
-因此：
+- 首页：`https://exist-d.github.io/`
+- 项目页：`https://exist-d.github.io/projects/`
+- Markdown 里引用站内图片或页面时直接写 `/images/xxx.png`、`/notes/xxx/`。
 
-- 正确：首页 `https://exist-d.github.io/exist.github.io/`
-- 正确：项目页 `https://exist-d.github.io/exist.github.io/projects/`
-- 错误：`https://exist-d.github.io/projects/`
+### 旧地址兼容
 
-如果以后改成用户主页仓库根路径或自定义域名，需要同步调整 `astro.config.mjs` 中的 `base`。
+2026-11 之前站点挂在 `https://exist-d.github.io/exist.github.io/` 下。旧链接（例如简历里贴出去的）会落到根站点的 404 页，`src/pages/404.astro` 里的脚本会把 `/exist.github.io/xxx` 自动跳转到 `/xxx`。
+
+如果以后改成自定义域名，需要同步调整 `astro.config.mjs` 的 `site` 和 `settings.json` 的 `site`。

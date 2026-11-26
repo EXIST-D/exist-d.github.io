@@ -67,7 +67,7 @@ minutes: 8
 
 这里面有很多不是我一个人做的。项目在 11 月 5 日公开源码以后，有朋友主动来一起开发：精灵对战从“能打”到“有深度”，图鉴、状态异常、训练家、PvP 和世界 BOSS，都是 [Anwan0527](https://github.com/Anwan0527) 做的；钓鱼全服播报和校园耕作，是 [Tiantian-17](https://github.com/Tiantian-17) 做的。谢谢你们。也谢谢每一个报 bug、提建议、留下一句话的人，是你们让这所像素校园有了人气。
 
-![离线试玩截图：角色走过傍晚的南门广场，左下角是校园小地图。](/exist.github.io/images/pixelcampus-south-gate.webp)
+![离线试玩截图：角色走过傍晚的南门广场，左下角是校园小地图。](/images/pixelcampus-south-gate.webp)
 
 ## 这 26 天留下了什么
 
@@ -102,7 +102,7 @@ minutes: 8
 - 更多的训练家和区域，一条绕校园的环线摆渡；
 - 认真做一遍手机上的体验，加载更快，操作更顺手。
 
-如果你也在这所校园里待过，或者只是想来看看，欢迎随时回来走一走。游戏在 [huepixel.top](https://huepixel.top/pixel/)，源码在 [GitHub](https://github.com/EXIST-D/PixelCampus)，项目的技术细节整理在[项目页](/exist.github.io/projects/pixelcampus/)。
+如果你也在这所校园里待过，或者只是想来看看，欢迎随时回来走一走。游戏在 [huepixel.top](https://huepixel.top/pixel/)，源码在 [GitHub](https://github.com/EXIST-D/PixelCampus)，项目的技术细节整理在[项目页](/projects/pixelcampus/)。
 
 玩法反馈、报 bug、想法建议，或者想一起开发，都欢迎加交流群：**1126319323**。
 

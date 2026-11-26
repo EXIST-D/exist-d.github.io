@@ -4,7 +4,6 @@ import rehypeKatex from 'rehype-katex';
 
 export default defineConfig({
   site: 'https://exist-d.github.io',
-  base: '/exist.github.io',
   markdown: {
     remarkPlugins: [remarkMath],
     rehypePlugins: [rehypeKatex],
